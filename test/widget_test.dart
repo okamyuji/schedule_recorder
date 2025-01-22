@@ -1,29 +1,39 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:schedule_recorder/main.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
+import 'package:schedule_recorder/screens/schedule_page/schedule_page.dart';
 
+import 'widget_test.mocks.dart';
+
+@GenerateMocks([FlutterSoundRecorder, FlutterSoundPlayer])
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(ScheduleRecorderApp());
+  late MockFlutterSoundRecorder mockRecorder;
+  late MockFlutterSoundPlayer mockPlayer;
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  setUp(() {
+    mockRecorder = MockFlutterSoundRecorder();
+    mockPlayer = MockFlutterSoundPlayer();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    when(mockRecorder.openRecorder()).thenAnswer(
+        (_) async => Future<FlutterSoundRecorder?>.value(mockRecorder));
+    when(mockPlayer.openPlayer())
+        .thenAnswer((_) async => Future<FlutterSoundPlayer?>.value(mockPlayer));
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('Schedule Recorder App smoke test', (WidgetTester tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: SchedulePage(
+        recorder: mockRecorder,
+        player: mockPlayer,
+      ),
+    ));
+
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // Verify that recording buttons are present
+    expect(find.text('Start Recording'), findsOneWidget);
+    expect(find.text('Play Recording'), findsOneWidget);
   });
 }

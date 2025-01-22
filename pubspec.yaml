@@ -39,6 +39,9 @@ dependencies:
   permission_handler: ^11.3.1
   path_provider: ^2.1.5
   flutter_local_notifications: ^18.0.1
+  build_runner: ^2.4.14
+  mockito: ^5.4.5
+  logger: ^2.5.0
 
 dev_dependencies:
   flutter_test:
