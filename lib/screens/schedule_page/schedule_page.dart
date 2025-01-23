@@ -3,7 +3,7 @@ import 'package:flutter_sound/flutter_sound.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-
+import 'package:schedule_recorder/widgets/schedule_page/recording_buttons.dart';
 
 final logger = Logger();
 
@@ -33,17 +33,14 @@ class SchedulePageState extends State<SchedulePage> {
   }
 
   Future<void> _initializeRecorder() async {
-    // レコーダーを開く
     await widget.recorder.openRecorder();
     await widget.player.openPlayer();
 
-    // マイクの権限を要求
     final status = await Permission.microphone.request();
     if (!status.isGranted) {
       throw Exception('マイクの権限が必要です');
     }
 
-    // 録音ファイルのパスを設定
     final dir = await getApplicationDocumentsDirectory();
     _recordingPath = '${dir.path}/recording.aac';
   }
@@ -133,14 +130,14 @@ class SchedulePageState extends State<SchedulePage> {
             if (isPlaying)
               const Text('再生中...', style: TextStyle(color: Colors.green)),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: isRecording ? _stopRecording : _startRecording,
-              child: Text(isRecording ? 'Stop Recording' : 'Start Recording'),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: isPlaying ? _stopPlaying : _startPlaying,
-              child: Text(isPlaying ? 'Stop Playing' : 'Play Recording'),
+            // 録音＆再生ボタン群
+            RecordingButtons(
+              isRecording: isRecording,
+              isPlaying: isPlaying,
+              onStartRecording: _startRecording,
+              onStopRecording: _stopRecording,
+              onStartPlaying: _startPlaying,
+              onStopPlaying: _stopPlaying,
             ),
           ],
         ),
