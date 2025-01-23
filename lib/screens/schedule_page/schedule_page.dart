@@ -1,15 +1,54 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
+import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:schedule_recorder/services/schedule_page/audio_service.dart';
 import 'package:schedule_recorder/widgets/schedule_page/recording_buttons.dart';
+import 'package:share_plus/share_plus.dart';
 
-final logger = Logger();
+final logger = Logger(
+  filter: ProductionFilter(),
+  output: MultiOutput([
+    ConsoleOutput(),
+    CustomFileOutput(),
+  ]),
+  printer: SimplePrinter(colors: false),
+  level: Level.info,
+);
+
+class CustomFileOutput extends LogOutput {
+  static String? _logPath;
+
+  static void setLogPath(String path) {
+    _logPath = path;
+  }
+
+  @override
+  void output(OutputEvent event) {
+    if (_logPath == null) return;
+
+    try {
+      final file = File(_logPath!);
+      final timestamp = DateTime.now().toIso8601String();
+      final level = event.level.toString().split('.').last.toUpperCase();
+
+      // 各ログ行にタイムスタンプとレベルを付加
+      for (final line in event.lines) {
+        final formattedLine = '$timestamp [$level] $line\n';
+        file.writeAsStringSync(formattedLine,
+            mode: FileMode.append, flush: true);
+      }
+    } catch (e) {
+      debugPrint('ログファイルの書き込みに失敗: $e');
+    }
+  }
+}
 
 class SchedulePage extends StatefulWidget {
   final AudioRecorder recorder;
@@ -31,10 +70,12 @@ class SchedulePageState extends State<SchedulePage> {
   bool isPaused = false;
   String? _recordingPath;
   bool _isInitialized = false;
+  late final String _logPath;
 
   @override
   void initState() {
     super.initState();
+    _initializeLogger();
     _initializeRecorder().then((_) {
       if (mounted) {
         setState(() {
@@ -44,6 +85,26 @@ class SchedulePageState extends State<SchedulePage> {
     }).catchError((e) {
       logger.e('Recorder initialization error: $e');
     });
+  }
+
+  Future<void> _initializeLogger() async {
+    final appDir = await getApplicationDocumentsDirectory();
+    _logPath = path.join(appDir.path, 'app.log');
+    CustomFileOutput.setLogPath(_logPath);
+
+    // ログファイルの初期化
+    final logFile = File(_logPath);
+    if (!logFile.existsSync()) {
+      await logFile.create();
+    }
+
+    // 初期ログエントリを書き込む（ファイルが空の場合のみ）
+    if (logFile.lengthSync() == 0) {
+      logger
+        ..w('=== アプリケーションログ開始 ===')
+        ..w('アプリケーションを起動しました')
+        ..w('ログファイルパス: $_logPath');
+    }
   }
 
   Future<void> _initializeRecorder() async {
@@ -100,7 +161,7 @@ class SchedulePageState extends State<SchedulePage> {
         }
 
         await widget.recorder.start(
-          RecordConfig(
+          const RecordConfig(
             encoder: AudioEncoder.aacLc,
             bitRate: 128000,
             sampleRate: 44100,
@@ -277,6 +338,14 @@ class SchedulePageState extends State<SchedulePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Schedule Recorder'),
+        actions: [
+          if (_isInitialized && !isRecording)
+            IconButton(
+              icon: const Icon(Icons.share),
+              tooltip: 'ファイルを共有',
+              onPressed: _shareFiles,
+            ),
+        ],
       ),
       body: Center(
         child: Column(
@@ -308,5 +377,50 @@ class SchedulePageState extends State<SchedulePage> {
         ),
       ),
     );
+  }
+
+  Future<void> _shareFiles() async {
+    try {
+      logger.w('ファイル共有を開始します');
+      final appDir = await getApplicationDocumentsDirectory();
+      final recordingPath = path.join(appDir.path, 'recording.m4a');
+      final logFile = File(_logPath);
+      final recordingFile = File(recordingPath);
+
+      if (!recordingFile.existsSync() && !logFile.existsSync()) {
+        logger.e('共有可能なファイルが見つかりません');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('共有できるファイルがありません')),
+        );
+        return;
+      }
+
+      final files = <XFile>[];
+
+      // 録音ファイルの追加
+      if (recordingFile.existsSync()) {
+        logger.w('録音ファイルを共有リストに追加: $recordingPath');
+        files.add(XFile(recordingPath, mimeType: 'audio/mp4'));
+      }
+
+      // ログファイルの追加
+      if (logFile.existsSync()) {
+        logger.w('ログファイルを共有リストに追加: $_logPath');
+        files.add(XFile(_logPath, mimeType: 'text/plain'));
+      }
+
+      await Share.shareXFiles(
+        files,
+        subject: '録音データとログ',
+      );
+      logger.w('ファイル共有が完了しました');
+    } catch (e) {
+      logger.e('ファイル共有に失敗しました: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ファイルの共有に失敗しました')),
+      );
+    }
   }
 }

@@ -51,7 +51,7 @@ void main() {
     });
 
     when(mockRecorder.start(
-      RecordConfig(
+      const RecordConfig(
         encoder: AudioEncoder.aacLc,
         bitRate: 128000,
         sampleRate: 44100,

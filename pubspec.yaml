@@ -43,6 +43,8 @@ dependencies:
   build_runner: ^2.4.14
   mockito: ^5.4.5
   logger: ^2.5.0
+  share_plus: ^10.1.4
+  path: ^1.9.0
 
 dev_dependencies:
   flutter_test:

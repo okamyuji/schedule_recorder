@@ -53,7 +53,7 @@ void main() {
 
     // 基本的なモックの設定
     when(mockRecorder.start(
-      RecordConfig(
+      const RecordConfig(
         encoder: AudioEncoder.aacLc,
         bitRate: 128000,
         sampleRate: 44100,
