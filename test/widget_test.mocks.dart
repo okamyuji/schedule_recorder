@@ -6,10 +6,10 @@
 import 'dart:async' as _i6;
 import 'dart:typed_data' as _i5;
 
-import 'package:flutter_sound/flutter_sound.dart' as _i2;
+import 'package:flutter_sound/flutter_sound.dart' as _i3;
 import 'package:flutter_sound_platform_interface/flutter_sound_recorder_platform_interface.dart'
-    as _i3;
-import 'package:logger/logger.dart' as _i4;
+    as _i4;
+import 'package:logger/logger.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -26,22 +26,35 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
+class _FakeLogger_0 extends _i1.SmartFake implements _i2.Logger {
+  _FakeLogger_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
 /// A class which mocks [FlutterSoundRecorder].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockFlutterSoundRecorder extends _i1.Mock
-    implements _i2.FlutterSoundRecorder {
+    implements _i3.FlutterSoundRecorder {
   MockFlutterSoundRecorder() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.RecorderState get recorderState =>
+  _i2.Logger get logger =>
+      (super.noSuchMethod(
+            Invocation.getter(#logger),
+            returnValue: _FakeLogger_0(this, Invocation.getter(#logger)),
+          )
+          as _i2.Logger);
+
+  @override
+  _i4.RecorderState get recorderState =>
       (super.noSuchMethod(
             Invocation.getter(#recorderState),
-            returnValue: _i3.RecorderState.isStopped,
+            returnValue: _i4.RecorderState.isStopped,
           )
-          as _i3.RecorderState);
+          as _i4.RecorderState);
 
   @override
   bool get isRecording =>
@@ -59,7 +72,7 @@ class MockFlutterSoundRecorder extends _i1.Mock
           as bool);
 
   @override
-  void setLogLevel(_i4.Level? aLevel) => super.noSuchMethod(
+  void setLogLevel(_i2.Level? aLevel) => super.noSuchMethod(
     Invocation.method(#setLogLevel, [aLevel]),
     returnValueForMissingStub: null,
   );
@@ -112,20 +125,20 @@ class MockFlutterSoundRecorder extends _i1.Mock
       );
 
   @override
-  void log(_i4.Level? logLevel, String? msg) => super.noSuchMethod(
+  void log(_i2.Level? logLevel, String? msg) => super.noSuchMethod(
     Invocation.method(#log, [logLevel, msg]),
     returnValueForMissingStub: null,
   );
 
   @override
-  _i6.Future<_i2.FlutterSoundRecorder?> openRecorder({
+  _i6.Future<_i3.FlutterSoundRecorder?> openRecorder({
     dynamic isBGService = false,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#openRecorder, [], {#isBGService: isBGService}),
-            returnValue: _i6.Future<_i2.FlutterSoundRecorder?>.value(),
+            returnValue: _i6.Future<_i3.FlutterSoundRecorder?>.value(),
           )
-          as _i6.Future<_i2.FlutterSoundRecorder?>);
+          as _i6.Future<_i3.FlutterSoundRecorder?>);
 
   @override
   _i6.Future<void> closeRecorder() =>
@@ -137,7 +150,7 @@ class MockFlutterSoundRecorder extends _i1.Mock
           as _i6.Future<void>);
 
   @override
-  _i6.Future<bool> isEncoderSupported(_i2.Codec? codec) =>
+  _i6.Future<bool> isEncoderSupported(_i3.Codec? codec) =>
       (super.noSuchMethod(
             Invocation.method(#isEncoderSupported, [codec]),
             returnValue: _i6.Future<bool>.value(false),
@@ -155,7 +168,7 @@ class MockFlutterSoundRecorder extends _i1.Mock
 
   @override
   _i6.Future<void> startRecorder({
-    _i2.Codec? codec = _i2.Codec.defaultCodec,
+    _i3.Codec? codec = _i3.Codec.defaultCodec,
     String? toFile,
     _i6.StreamSink<List<_i5.Float32List>>? toStreamFloat32,
     _i6.StreamSink<List<_i5.Int16List>>? toStreamInt16,
@@ -166,7 +179,7 @@ class MockFlutterSoundRecorder extends _i1.Mock
     int? bitRate = 16000,
     int? bufferSize = 8192,
     bool? enableVoiceProcessing = false,
-    _i3.AudioSource? audioSource = _i3.AudioSource.defaultSource,
+    _i4.AudioSource? audioSource = _i4.AudioSource.defaultSource,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#startRecorder, [], {
@@ -249,7 +262,7 @@ class MockFlutterSoundRecorder extends _i1.Mock
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockFlutterSoundPlayer extends _i1.Mock
-    implements _i2.FlutterSoundPlayer {
+    implements _i3.FlutterSoundPlayer {
   MockFlutterSoundPlayer() {
     _i1.throwOnMissingStub(this);
   }
@@ -266,12 +279,20 @@ class MockFlutterSoundPlayer extends _i1.Mock
   );
 
   @override
-  _i2.PlayerState get playerState =>
+  _i2.Logger get logger =>
+      (super.noSuchMethod(
+            Invocation.getter(#logger),
+            returnValue: _FakeLogger_0(this, Invocation.getter(#logger)),
+          )
+          as _i2.Logger);
+
+  @override
+  _i3.PlayerState get playerState =>
       (super.noSuchMethod(
             Invocation.getter(#playerState),
-            returnValue: _i2.PlayerState.isStopped,
+            returnValue: _i3.PlayerState.isStopped,
           )
-          as _i2.PlayerState);
+          as _i3.PlayerState);
 
   @override
   bool get isPlaying =>
@@ -289,7 +310,7 @@ class MockFlutterSoundPlayer extends _i1.Mock
           as bool);
 
   @override
-  void setLogLevel(_i4.Level? aLevel) => super.noSuchMethod(
+  void setLogLevel(_i2.Level? aLevel) => super.noSuchMethod(
     Invocation.method(#setLogLevel, [aLevel]),
     returnValueForMissingStub: null,
   );
@@ -354,7 +375,7 @@ class MockFlutterSoundPlayer extends _i1.Mock
   );
 
   @override
-  void log(_i4.Level? logLevel, String? msg) => super.noSuchMethod(
+  void log(_i2.Level? logLevel, String? msg) => super.noSuchMethod(
     Invocation.method(#log, [logLevel, msg]),
     returnValueForMissingStub: null,
   );
@@ -365,14 +386,14 @@ class MockFlutterSoundPlayer extends _i1.Mock
           as bool);
 
   @override
-  _i6.Future<_i2.FlutterSoundPlayer?> openPlayer({
+  _i6.Future<_i3.FlutterSoundPlayer?> openPlayer({
     dynamic isBGService = false,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#openPlayer, [], {#isBGService: isBGService}),
-            returnValue: _i6.Future<_i2.FlutterSoundPlayer?>.value(),
+            returnValue: _i6.Future<_i3.FlutterSoundPlayer?>.value(),
           )
-          as _i6.Future<_i2.FlutterSoundPlayer?>);
+          as _i6.Future<_i3.FlutterSoundPlayer?>);
 
   @override
   _i6.Future<void> closePlayer() =>
@@ -384,14 +405,14 @@ class MockFlutterSoundPlayer extends _i1.Mock
           as _i6.Future<void>);
 
   @override
-  _i6.Future<_i2.PlayerState> getPlayerState() =>
+  _i6.Future<_i3.PlayerState> getPlayerState() =>
       (super.noSuchMethod(
             Invocation.method(#getPlayerState, []),
-            returnValue: _i6.Future<_i2.PlayerState>.value(
-              _i2.PlayerState.isStopped,
+            returnValue: _i6.Future<_i3.PlayerState>.value(
+              _i3.PlayerState.isStopped,
             ),
           )
-          as _i6.Future<_i2.PlayerState>);
+          as _i6.Future<_i3.PlayerState>);
 
   @override
   _i6.Future<Map<String, Duration>> getProgress() =>
@@ -404,7 +425,7 @@ class MockFlutterSoundPlayer extends _i1.Mock
           as _i6.Future<Map<String, Duration>>);
 
   @override
-  _i6.Future<bool> isDecoderSupported(_i2.Codec? codec) =>
+  _i6.Future<bool> isDecoderSupported(_i3.Codec? codec) =>
       (super.noSuchMethod(
             Invocation.method(#isDecoderSupported, [codec]),
             returnValue: _i6.Future<bool>.value(false),
@@ -424,10 +445,10 @@ class MockFlutterSoundPlayer extends _i1.Mock
   _i6.Future<Duration?> startPlayer({
     String? fromURI,
     _i5.Uint8List? fromDataBuffer,
-    _i2.Codec? codec = _i2.Codec.aacADTS,
+    _i3.Codec? codec = _i3.Codec.aacADTS,
     int? sampleRate = 16000,
     int? numChannels = 1,
-    _i2.TWhenFinished? whenFinished,
+    _i3.TWhenFinished? whenFinished,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#startPlayer, [], {
@@ -463,11 +484,11 @@ class MockFlutterSoundPlayer extends _i1.Mock
 
   @override
   _i6.Future<void> startPlayerFromStream({
-    _i2.Codec? codec = _i2.Codec.pcm16,
+    _i3.Codec? codec = _i3.Codec.pcm16,
     int? numChannels = 1,
     int? sampleRate = 16000,
     int? bufferSize = 8192,
-    _i2.TWhenFinished? whenFinished,
+    _i3.TWhenFinished? whenFinished,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#startPlayerFromStream, [], {
