@@ -3,6 +3,7 @@ import 'package:flutter_sound/flutter_sound.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:schedule_recorder/services/schedule_page/audio_service.dart'; // 追加
 import 'package:schedule_recorder/widgets/schedule_page/recording_buttons.dart';
 
 final logger = Logger();
@@ -30,6 +31,12 @@ class SchedulePageState extends State<SchedulePage> {
   void initState() {
     super.initState();
     _initializeRecorder();
+
+    // AudioServiceのリスナーを設定
+    AudioService.setupNativeListeners(
+      onInterrupted: _handleRecordingInterrupted,
+      onResumed: _handleRecordingResumed,
+    );
   }
 
   Future<void> _initializeRecorder() async {
@@ -51,6 +58,8 @@ class SchedulePageState extends State<SchedulePage> {
         await widget.recorder.startRecorder(
           toFile: _recordingPath,
           codec: Codec.aacADTS,
+          sampleRate: 44100,
+          bitRate: 128000,
         );
         setState(() {
           isRecording = true;
@@ -89,6 +98,7 @@ class SchedulePageState extends State<SchedulePage> {
         setState(() {
           isPlaying = true;
         });
+        await widget.player.setVolume(5.0);
       } catch (e) {
         logger.e('再生開始エラー: $e');
       }
@@ -106,6 +116,25 @@ class SchedulePageState extends State<SchedulePage> {
         logger.e('再生停止エラー: $e');
       }
     }
+  }
+
+  // 中断時のハンドラ
+  void _handleRecordingInterrupted() {
+    if (isRecording) {
+      _stopRecording();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('録音が中断されました')),
+      );
+    }
+  }
+
+  // 再開時のハンドラ
+  void _handleRecordingResumed() {
+    // 録音を再開
+    _startRecording();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('録音が再開されました')),
+    );
   }
 
   @override

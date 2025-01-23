@@ -1,3 +1,4 @@
+// test/screens/schedule_page/schedule_page_test.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_sound/flutter_sound.dart';
@@ -16,8 +17,12 @@ void main() {
   late MockFlutterSoundRecorder mockRecorder;
   late MockFlutterSoundPlayer mockPlayer;
 
-  // permission_handler関連のMethodChannel
+  // permission_handler関連のMethodChannel（正しいチャネル名に変更）
   const MethodChannel permissionChannel =
+      MethodChannel('com.example.schedule_recorder/audio');
+
+  // カスタムaudio関連のMethodChannel
+  const MethodChannel audioChannel =
       MethodChannel('com.example.schedule_recorder/audio');
 
   // path_provider関連のMethodChannel
@@ -48,12 +53,20 @@ void main() {
           // 例: {'microphone': true}
           final result = <dynamic, dynamic>{};
           args.forEach((key, value) {
-            result[key] = 2; // 2 = granted
+            result[key] = 2;
           });
           return result;
         }
         return <dynamic, dynamic>{'microphone': 2}; // fallback
       }
+      return null;
+    });
+
+    // カスタムaudio関連のモック設定（必要に応じて設定）
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(audioChannel, (MethodCall methodCall) async {
+      // 'RecordingInterrupted'や'RecordingResumed'など、必要に応じてモックを設定
+      // 通常、これらはFlutterからNativeへ送信されるため、テストでは特に設定不要
       return null;
     });
 
@@ -65,17 +78,21 @@ void main() {
       return '/test/path';
     });
 
-    // FlutterSoundRecorderの標準動作
-    when(mockRecorder.openRecorder()).thenAnswer((_) async => null);
+    // FlutterSoundRecorderの標準動作（名前付きパラメータを含む）
+    when(mockRecorder.openRecorder(isBGService: anyNamed('isBGService')))
+        .thenAnswer((_) async => null);
     when(mockRecorder.startRecorder(
       toFile: anyNamed('toFile'),
       codec: anyNamed('codec'),
+      sampleRate: anyNamed('sampleRate'), // 追加
+      bitRate: anyNamed('bitRate'), // 追加
     )).thenAnswer((_) async => '');
     when(mockRecorder.stopRecorder()).thenAnswer((_) async => '');
     when(mockRecorder.closeRecorder()).thenAnswer((_) async => {});
 
-    // FlutterSoundPlayerの標準動作
-    when(mockPlayer.openPlayer()).thenAnswer((_) async => null);
+    // FlutterSoundPlayerの標準動作（名前付きパラメータを含む）
+    when(mockPlayer.openPlayer(isBGService: anyNamed('isBGService')))
+        .thenAnswer((_) async => null);
     when(mockPlayer.startPlayer(
       fromURI: anyNamed('fromURI'),
       codec: anyNamed('codec'),
@@ -89,6 +106,8 @@ void main() {
     // モックの解除
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(permissionChannel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(audioChannel, null);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(pathProviderChannel, null);
   });
@@ -134,6 +153,8 @@ void main() {
       when(mockRecorder.startRecorder(
         toFile: anyNamed('toFile'),
         codec: anyNamed('codec'),
+        sampleRate: anyNamed('sampleRate'), // 追加
+        bitRate: anyNamed('bitRate'), // 追加
       )).thenThrow('Test Recorder Error');
 
       await tester.pumpWidget(MaterialApp(
@@ -153,6 +174,7 @@ void main() {
       expect(find.text('Stop Recording'), findsNothing);
       expect(find.text('Start Recording'), findsOneWidget);
     });
+
     testWidgets('Exception handling in _startPlaying logs error',
         (WidgetTester tester) async {
       // startPlayerが失敗するケース
