@@ -266,6 +266,7 @@ class SchedulePageState extends State<SchedulePage> {
     if (isPlaying) {
       widget.player.stop();
     }
+    widget.recorder.dispose();
     widget.player.dispose();
     logger.i('Recorder and Player disposed');
     super.dispose();
