@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sound/flutter_sound.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:record/record.dart';
 
 import 'screens/schedule_page/schedule_page.dart';
 
@@ -16,8 +17,8 @@ class ScheduleRecorderApp extends StatelessWidget {
       title: 'Schedule Recorder',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: SchedulePage(
-        recorder: FlutterSoundRecorder(),
-        player: FlutterSoundPlayer(),
+        recorder: AudioRecorder(),
+        player: AudioPlayer(),
       ),
     );
   }

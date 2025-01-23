@@ -8,8 +8,9 @@ import 'package:permission_handler_platform_interface/permission_handler_platfor
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:record/record.dart';
 import 'package:schedule_recorder/screens/schedule_page/schedule_page.dart';
+import 'package:schedule_recorder/widgets/schedule_page/recording_buttons.dart';
 
-import 'schedule_page_test.mocks.dart';
+import 'main_test.mocks.dart';
 
 class MockPermissionHandlerPlatform extends Mock
     with MockPlatformInterfaceMixin
@@ -30,8 +31,6 @@ class MockPermissionHandlerPlatform extends Mock
 
 @GenerateMocks([AudioRecorder, AudioPlayer])
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-
   late MockAudioRecorder mockRecorder;
   late MockAudioPlayer mockPlayer;
 
@@ -51,7 +50,6 @@ void main() {
       return '/test/path';
     });
 
-    // 基本的なモックの設定
     when(mockRecorder.start(
       RecordConfig(
         encoder: AudioEncoder.aacLc,
@@ -60,7 +58,6 @@ void main() {
       ),
       path: anyNamed('path'),
     )).thenAnswer((_) async {});
-
     when(mockRecorder.stop()).thenAnswer((_) async => 'test_path');
     when(mockRecorder.pause()).thenAnswer((_) async {});
     when(mockRecorder.resume()).thenAnswer((_) async {});
@@ -79,7 +76,7 @@ void main() {
             const MethodChannel('plugins.flutter.io/path_provider'), null);
   });
 
-  Future<void> pumpSchedulePage(WidgetTester tester) async {
+  testWidgets('SchedulePageが正しく初期化される', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: SchedulePage(
@@ -89,88 +86,80 @@ void main() {
       ),
     );
 
+    // 初期化中はCircularProgressIndicatorが表示される
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    // 非同期処理の完了を待つ
     await tester.pump(const Duration(milliseconds: 100));
+
+    // 初期化が完了するとCircularProgressIndicatorが消える
     expect(find.byType(CircularProgressIndicator), findsNothing);
-  }
 
-  testWidgets('再生の開始と停止が正しく動作する', (tester) async {
-    await pumpSchedulePage(tester);
+    // RecordingButtonsが表示される
+    expect(find.byType(RecordingButtons), findsOneWidget);
 
-    // 再生開始
-    await tester.tap(find.byKey(const Key('play_button')));
-    await tester.pump();
-
-    expect(find.text('再生中...'), findsOneWidget);
-
-    // 再生停止
-    await tester.tap(find.byKey(const Key('stop_button')));
-    await tester.pump();
-
+    // 初期状態では録音中/再生中のテキストが表示されない
+    expect(find.text('録音中...'), findsNothing);
+    expect(find.text('録音一時停止中...'), findsNothing);
     expect(find.text('再生中...'), findsNothing);
   });
 
-  testWidgets('録音の中断と再開のテスト', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
+  group('ScheduleRecorderApp', () {
+    testWidgets('アプリが正しく初期化される', (WidgetTester tester) async {
+      await tester.pumpWidget(MaterialApp(
+        title: 'Schedule Recorder',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          useMaterial3: true,
+        ),
         home: SchedulePage(
           recorder: mockRecorder,
           player: mockPlayer,
         ),
-      ),
-    );
+      ));
 
-    // 初期化待ち
-    await tester.pump(const Duration(milliseconds: 100));
+      // MaterialAppが存在することを確認
+      expect(find.byType(MaterialApp), findsOneWidget);
 
-    // 録音開始
-    await tester.tap(find.byKey(const Key('record_button')));
-    await tester.pump();
+      // アプリタイトルが正しいことを確認
+      final MaterialApp app = tester.widget(find.byType(MaterialApp));
+      expect(app.title, 'Schedule Recorder');
 
-    // 録音開始時の状態を確認
-    expect(find.text('録音中...'), findsOneWidget);
-    expect(find.text('録音一時停止中...'), findsNothing);
-    expect(find.byKey(const Key('pause_button')), findsOneWidget);
-    expect(find.byKey(const Key('resume_button')), findsNothing);
+      // テーマが正しく設定されていることを確認
+      final ThemeData theme = app.theme!;
+      final Color primaryColor = theme.colorScheme.primary;
+      expect(primaryColor.b > primaryColor.r, isTrue);
+      expect(primaryColor.b > primaryColor.g, isTrue);
 
-    // 電話着信（録音は継続）
-    // この時点では録音は継続されるため、状態は変化しない
-    expect(find.text('録音中...'), findsOneWidget);
-    expect(find.text('録音一時停止中...'), findsNothing);
-    expect(find.byKey(const Key('pause_button')), findsOneWidget);
-    expect(find.byKey(const Key('resume_button')), findsNothing);
+      // SchedulePageが存在することを確認
+      expect(find.byType(SchedulePage), findsOneWidget);
 
-    // 電話に出た場合（録音は一時停止）
-    await tester.tap(find.byKey(const Key('pause_button')));
-    await tester.pump();
+      // 初期化が完了するまで待つ
+      await tester.pump(const Duration(milliseconds: 100));
 
-    // 一時停止時の状態を確認
-    expect(find.text('録音一時停止中...'), findsOneWidget);
-    expect(find.text('録音中...'), findsNothing);
-    expect(find.byKey(const Key('pause_button')), findsNothing);
-    expect(find.byKey(const Key('resume_button')), findsOneWidget);
-    verify(mockRecorder.pause()).called(1);
+      // RecordingButtonsが表示されることを確認
+      expect(find.byType(RecordingButtons), findsOneWidget);
+    });
 
-    // 電話を切った場合（録音は再開）
-    await tester.tap(find.byKey(const Key('resume_button')));
-    await tester.pump();
+    testWidgets('SchedulePageに正しい依存関係が注入される', (WidgetTester tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: SchedulePage(
+          recorder: mockRecorder,
+          player: mockPlayer,
+        ),
+      ));
 
-    // 録音再開時の状態を確認
-    expect(find.text('録音中...'), findsOneWidget);
-    expect(find.text('録音一時停止中...'), findsNothing);
-    expect(find.byKey(const Key('pause_button')), findsOneWidget);
-    expect(find.byKey(const Key('resume_button')), findsNothing);
-    verify(mockRecorder.resume()).called(1);
+      // 初期化が完了するまで待つ
+      await tester.pump(const Duration(milliseconds: 100));
 
-    // 録音停止
-    await tester.tap(find.byKey(const Key('record_stop_button')));
-    await tester.pump();
+      // SchedulePageが存在することを確認
+      final schedulePage = find.byType(SchedulePage);
+      expect(schedulePage, findsOneWidget);
 
-    // 録音停止時の状態を確認
-    expect(find.text('録音中...'), findsNothing);
-    expect(find.text('録音一時停止中...'), findsNothing);
-    expect(find.byKey(const Key('pause_button')), findsNothing);
-    expect(find.byKey(const Key('resume_button')), findsNothing);
-    verify(mockRecorder.stop()).called(1);
+      // 注入されたモックが正しいことを確認
+      final SchedulePage page = tester.widget(schedulePage);
+      expect(page.recorder, mockRecorder);
+      expect(page.player, mockPlayer);
+    });
   });
 }

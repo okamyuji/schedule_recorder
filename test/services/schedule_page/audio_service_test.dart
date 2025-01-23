@@ -24,8 +24,7 @@ void main() {
           .setMockMethodCallHandler(channel, null);
     });
 
-    test(
-        'setupNativeListeners calls onInterrupted when RecordingInterrupted is received',
+    test('setupNativeListenersでRecordingInterruptedが受信されたらonInterruptedが呼ばれる',
         () async {
       // Arrange
       bool onInterruptedCalled = false;
@@ -55,8 +54,7 @@ void main() {
       expect(onResumedCalled, isFalse);
     });
 
-    test(
-        'setupNativeListeners calls onResumed when RecordingResumed is received',
+    test('setupNativeListenersでRecordingResumedが受信されたらonResumedが呼ばれる',
         () async {
       // Arrange
       bool onInterruptedCalled = false;
@@ -86,7 +84,7 @@ void main() {
       expect(onResumedCalled, isTrue);
     });
 
-    test('setupNativeListeners throws UnsupportedError for unknown method',
+    test('setupNativeListenersでUnknownMethodが受信されたらUnsupportedErrorがスローされる',
         () async {
       // Arrange
       AudioService.setupNativeListeners(
