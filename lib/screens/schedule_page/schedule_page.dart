@@ -9,9 +9,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:schedule_recorder/services/schedule_page/audio_service.dart';
+import 'package:schedule_recorder/services/schedule_page/file_receiver_service.dart';
 import 'package:schedule_recorder/services/schedule_page/file_sharing_service.dart';
 import 'package:schedule_recorder/widgets/schedule_page/recording_buttons.dart';
 
+/// ロガー
 final logger = Logger(
   filter: ProductionFilter(),
   output: MultiOutput([
@@ -22,6 +24,7 @@ final logger = Logger(
   level: Level.info,
 );
 
+/// ログファイルの出力
 class CustomFileOutput extends LogOutput {
   static String? _logPath;
 
@@ -50,6 +53,7 @@ class CustomFileOutput extends LogOutput {
   }
 }
 
+/// スケジュールページ
 class SchedulePage extends StatefulWidget {
   final AudioRecorder recorder;
   final AudioPlayer player;
@@ -66,6 +70,7 @@ class SchedulePage extends StatefulWidget {
   SchedulePageState createState() => SchedulePageState();
 }
 
+/// スケジュールページの状態
 class SchedulePageState extends State<SchedulePage> {
   bool isRecording = false;
   bool isPlaying = false;
@@ -74,24 +79,89 @@ class SchedulePageState extends State<SchedulePage> {
   bool _isInitialized = false;
   late final String _logPath;
   late final FileSharingService _fileSharingService;
+  late final FileReceiverService _fileReceiverService;
 
   @override
   void initState() {
     super.initState();
     _fileSharingService =
         widget.fileSharingService ?? FileSharingService(logger: logger);
+    _fileReceiverService = FileReceiverService(logger: logger);
     _initializeLogger();
     _initializeRecorder().then((_) {
       if (mounted) {
         setState(() {
           _isInitialized = true;
         });
+        _setupFileReceiver();
       }
     }).catchError((e) {
       logger.e('Recorder initialization error: $e');
     });
   }
 
+  /// ファイル受信サービスの設定
+  void _setupFileReceiver() {
+    _fileReceiverService.handleSharedFiles(
+      onAudioFileReceived: _handleReceivedAudioFile,
+      onLogFileReceived: _handleReceivedLogFile,
+    );
+  }
+
+  /// 共有された音声ファイルをアプリのドキュメントディレクトリにコピーする
+  ///
+  /// [file] - コピーするファイル
+  ///
+  /// 戻り値: コピーされたファイルのパス
+  Future<void> _handleReceivedAudioFile(File file) async {
+    try {
+      final newPath = await _fileReceiverService.copyFileToDocuments(
+        file,
+        'recording.m4a',
+      );
+      setState(() {
+        _recordingPath = newPath;
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('音声ファイルを受信しました')),
+      );
+    } catch (e) {
+      logger.e('音声ファイルの処理に失敗: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('音声ファイルの処理に失敗しました')),
+      );
+    }
+  }
+
+  /// 共有されたログファイルをアプリのドキュメントディレクトリにコピーする
+  ///
+  /// [file] - コピーするファイル
+  ///
+  /// 戻り値: コピーされたファイルのパス
+  Future<void> _handleReceivedLogFile(File file) async {
+    try {
+      await _fileReceiverService.copyFileToDocuments(
+        file,
+        'app.log',
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ログファイルを受信しました')),
+      );
+    } catch (e) {
+      logger.e('ログファイルの処理に失敗: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ログファイルの処理に失敗しました')),
+      );
+    }
+  }
+
+  /// ログファイルの初期化
+  ///
+  /// 戻り値: ログファイルのパス
   Future<void> _initializeLogger() async {
     final appDir = await getApplicationDocumentsDirectory();
     _logPath = path.join(appDir.path, 'app.log');
@@ -112,6 +182,9 @@ class SchedulePageState extends State<SchedulePage> {
     }
   }
 
+  /// 録音機器の初期化
+  ///
+  /// 戻り値: 録音機器のパス
   Future<void> _initializeRecorder() async {
     try {
       logger.i('Initializing recorder...');
@@ -132,6 +205,9 @@ class SchedulePageState extends State<SchedulePage> {
     }
   }
 
+  /// 録音の開始
+  ///
+  /// 戻り値: 録音の開始結果
   Future<void> _startRecording() async {
     if (!_isInitialized) {
       logger.w('Recorder is not initialized yet');
@@ -214,6 +290,9 @@ class SchedulePageState extends State<SchedulePage> {
     }
   }
 
+  /// 再生の開始
+  ///
+  /// 戻り値: 再生の開始結果
   Future<void> _startPlaying() async {
     if (!isPlaying && _recordingPath != null) {
       try {
@@ -256,6 +335,9 @@ class SchedulePageState extends State<SchedulePage> {
     }
   }
 
+  /// 再生の停止
+  ///
+  /// 戻り値: 再生の停止結果
   Future<void> _stopPlaying() async {
     if (isPlaying) {
       try {
@@ -273,6 +355,9 @@ class SchedulePageState extends State<SchedulePage> {
     }
   }
 
+  /// 録音の中断
+  ///
+  /// 戻り値: 録音の中断結果
   Future<void> _handleRecordingInterrupted() async {
     logger.i(
         'Recording interrupted handler called. isRecording: $isRecording, isPaused: $isPaused');
@@ -296,6 +381,9 @@ class SchedulePageState extends State<SchedulePage> {
     }
   }
 
+  /// 録音の再開
+  ///
+  /// 戻り値: 録音の再開結果
   Future<void> _handleRecordingResumed() async {
     if (isPaused) {
       try {
@@ -384,6 +472,9 @@ class SchedulePageState extends State<SchedulePage> {
     );
   }
 
+  /// ファイルの共有
+  ///
+  /// 戻り値: ファイルの共有結果
   Future<void> _shareFiles() async {
     try {
       await _fileSharingService.shareFiles(

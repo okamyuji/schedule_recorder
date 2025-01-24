@@ -5,8 +5,13 @@ class AudioService {
   static const MethodChannel _channel =
       MethodChannel('com.example.schedule_recorder/audio');
 
+  /// ロガー
   static final Logger _logger = Logger();
 
+  /// ネイティブリスナーの設定
+  ///
+  /// [onInterrupted] - 録音中断時のコールバック
+  /// [onResumed] - 録音再開時のコールバック
   static void setupNativeListeners({
     required VoidCallback onInterrupted,
     required VoidCallback onResumed,

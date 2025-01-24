@@ -1,6 +1,6 @@
 # Schedule Recorder
 
-Schedule Recorderは、Flutterをベースにした音声を録音し、予定管理に活用できるアプリケーションです。iOSおよびAndroidの両プラットフォームで動作しますが、特にiOSに最適化された設計と機能を備えています。
+Schedule Recorderは、Flutterをベースにした音声を録音し、予定管理に活用できるアプリケーションです。iOSに最適化された設計と機能を備えています。
 
 ## 特徴
 
@@ -12,6 +12,9 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
     - 録音中でもバックグラウンドで動作可能な設計を採用しています。
 - 録音の中断・再開
     - iOSのシステムイベント（例: 着信）にも対応し、録音を中断・再開する機能を提供しています。
+- ファイル共有機能
+    - iTunesまたはFinderを介したファイル共有に対応
+    - 他のアプリとの音声ファイルおよびログファイルの共有が可能
 
 ### 全般的な機能
 
@@ -23,6 +26,107 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
     - 不明な操作やエラーを適切に通知。
 - プラットフォーム独立性
     - Flutterを採用することで、Androidでも同様の操作性を提供。
+
+## iOS固有の設定
+
+### Info.plist の設定
+
+1. マイク使用権限
+
+    ```xml
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Microphone access is required to record audio.</string>
+    ```
+
+2. バックグラウンド実行の設定
+
+    ```xml
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>audio</string>
+        <string>processing</string>
+    </array>
+    ```
+
+3. ファイル共有の設定
+
+    ```xml
+    <key>LSSupportsOpeningDocumentsInPlace</key>
+    <true/>
+    <key>UIFileSharingEnabled</key>
+    <true/>
+    ```
+
+4. ファイルタイプの設定
+
+    ```xml
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>Audio</string>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.audio</string>
+                <string>public.mp3</string>
+                <string>public.mpeg-4-audio</string>
+                <string>com.apple.m4a-audio</string>
+            </array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>Log File</string>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.text</string>
+                <string>public.plain-text</string>
+                <string>public.log</string>
+            </array>
+        </dict>
+    </array>
+    ```
+
+5. URLスキームの設定
+
+    ```xml
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>schedulerecorder</string>
+            </array>
+            <key>CFBundleURLName</key>
+            <string>com.example.scheduleRecorder</string>
+        </dict>
+    </array>
+    ```
+
+### 設定の効果
+
+1. マイク使用権限
+   - アプリがマイクを使用する際のユーザー許可を取得可能に
+
+2. バックグラウンド実行
+   - アプリがバックグラウンドでも録音を継続可能に
+   - オーディオ処理をバックグラウンドで実行可能に
+
+3. ファイル共有機能
+   - iTunesまたはFinderでのファイル共有が可能に
+   - アプリ内のドキュメントディレクトリへの直接アクセスが可能に
+
+4. ファイルタイプ対応
+   - 音声ファイル（.m4a, .mp3）の共有メニューにアプリが表示
+   - テキストファイル（.txt, .log）の共有メニューにアプリが表示
+   - これらのファイルを開くアプリとして選択可能に
+
+5. URLスキーム
+   - `schedulerecorder://` スキームでアプリを起動可能に
+   - 他のアプリからの連携が可能に
 
 ## 機能概要
 
@@ -120,6 +224,14 @@ flutter test
     open ios/Runner.xcworkspace
     Xcodeでターゲットを選択し、ビルドを実行。
     ```
+
+- iOSデバイスでの信頼設定
+    1. `flutter install`でアプリをインストールした後、アプリを起動する前に以下の設定が必要です
+    2. iOSデバイスの「設定」アプリを開く
+    3. 「一般」>「VPNとデバイス管理」を選択
+    4. 開発者のメールアドレスを選択
+    5. 「このデベロッパを信頼」を選択
+    6. この設定後、アプリが正常に起動できるようになります
 
 ## トラブルシューティング
 
