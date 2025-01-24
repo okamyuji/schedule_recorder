@@ -329,8 +329,28 @@ flutter test
     </array>
     ```
 
+3. 署名とプロビジョニングの問題
+    - 症状: `No profiles for 'com.example.scheduleRecorder' were found` というエラーが発生
+    - 解決手順:
+        1. Xcodeで`ios/Runner.xcworkspace`を開く
+        2. RunnerプロジェクトのSigningセクションで以下を確認
+            - Teamが選択されているか
+                - personal teamでもビルドはできます
+            - Bundle Identifierが正しく設定されているか
+            - Automatically manage signingが有効になっているか
+        3. Product > Clean Build Folderを実行
+        4. Product > Buildを実行
+    - 代替解決策:
+        - コマンドラインでビルドする場合は `-allowProvisioningUpdates` オプションを追加:
+
+        ```bash
+        flutter build ios --allow-provisioning-updates
+        ```
+
 ## 今後の改善点
 
+- 文字列定数の管理
+    - 文字列はすべて`lib/constants/strings.dart`で管理する。
 - クラウド連携
     - 録音データをクラウドストレージに保存する機能。
 - 音声認識
