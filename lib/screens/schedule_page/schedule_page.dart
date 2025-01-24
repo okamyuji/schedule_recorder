@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -16,44 +18,57 @@ import 'package:schedule_recorder/services/schedule_page/file_receiver_service.d
 import 'package:schedule_recorder/services/schedule_page/file_sharing_service.dart';
 import 'package:schedule_recorder/widgets/schedule_page/audio_file_list.dart';
 import 'package:schedule_recorder/widgets/schedule_page/recording_buttons.dart';
+import 'package:synchronized/synchronized.dart';
 
 /// ロガー
 final logger = Logger(
-  filter: ProductionFilter(),
+  filter: DevelopmentFilter(),
   output: MultiOutput([
     ConsoleOutput(),
     CustomFileOutput(),
   ]),
-  printer: SimplePrinter(colors: false),
-  level: Level.info,
+  printer: PrettyPrinter(
+      methodCount: 2,
+      errorMethodCount: 8,
+      lineLength: 120,
+      colors: false,
+      printEmojis: false,
+      dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart),
+  level: Level.debug,
 );
 
 /// ログファイルの出力
 class CustomFileOutput extends LogOutput {
   static String? _logPath;
+  static final _lock = Lock();
 
   static void setLogPath(String path) {
     _logPath = path;
+    final file = File(_logPath!);
+    if (!file.existsSync()) {
+      file.createSync(recursive: true);
+    }
   }
 
   @override
   void output(OutputEvent event) {
     if (_logPath == null) return;
 
-    try {
-      final file = File(_logPath!);
-      final timestamp = DateTime.now().toIso8601String();
-      final level = event.level.toString().split('.').last.toUpperCase();
+    _lock.synchronized(() {
+      try {
+        final file = File(_logPath!);
+        final timestamp = DateTime.now().toIso8601String();
+        final level = event.level.toString().split('.').last.toUpperCase();
 
-      // 各ログ行にタイムスタンプとレベルを付加
-      for (final line in event.lines) {
-        final formattedLine = '$timestamp [$level] $line\n';
-        file.writeAsStringSync(formattedLine,
-            mode: FileMode.append, flush: true);
+        for (final line in event.lines) {
+          final formattedLine = '$timestamp [$level] $line\n';
+          file.writeAsStringSync(formattedLine,
+              mode: FileMode.append, flush: true);
+        }
+      } catch (e) {
+        debugPrint('ログファイルの書き込みに失敗: $e');
       }
-    } catch (e) {
-      debugPrint('ログファイルの書き込みに失敗: $e');
-    }
+    });
   }
 }
 
@@ -209,25 +224,44 @@ class _SchedulePageState extends State<SchedulePage> {
   }
 
   /// ログファイルの初期化
-  ///
-  /// 戻り値: ログファイルのパス
   Future<void> _initializeLogger() async {
-    final appDir = await getApplicationDocumentsDirectory();
-    _logPath = path.join(appDir.path, 'app.log');
-    CustomFileOutput.setLogPath(_logPath);
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      _logPath = path.join(appDir.path, 'app.log');
+      CustomFileOutput.setLogPath(_logPath);
 
-    // ログファイルの初期化
-    final logFile = File(_logPath);
-    if (!logFile.existsSync()) {
-      await logFile.create();
-    }
-
-    // 初期ログエントリを書き込む（ファイルが空の場合のみ）
-    if (logFile.lengthSync() == 0) {
       widget.logger
-        ..w('=== アプリケーションログ開始 ===')
-        ..w('アプリケーションを起動しました')
-        ..w('ログファイルパス: $_logPath');
+        ..i('=== アプリケーションログ開始 ===')
+        ..i('アプリケーションを起動しました')
+        ..i('ログファイルパス: $_logPath')
+        ..i('アプリバージョン: ${await _getAppVersion()}')
+        ..i('デバイス情報: ${await _getDeviceInfo()}');
+    } catch (e) {
+      debugPrint('ログ初期化エラー: $e');
+    }
+  }
+
+  /// アプリバージョンの取得
+  Future<String> _getAppVersion() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      return '${packageInfo.version}+${packageInfo.buildNumber}';
+    } catch (e) {
+      return 'Unknown';
+    }
+  }
+
+  /// デバイス情報の取得
+  Future<String> _getDeviceInfo() async {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      if (Platform.isIOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        return '${iosInfo.name} (${iosInfo.systemName} ${iosInfo.systemVersion})';
+      }
+      return 'Unknown';
+    } catch (e) {
+      return 'Error getting device info';
     }
   }
 
