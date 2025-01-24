@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:permission_handler_platform_interface/permission_handler_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:record/record.dart';
 import 'package:schedule_recorder/screens/schedule_page/schedule_page.dart';
+import 'package:schedule_recorder/services/schedule_page/file_management_service.dart';
 import 'package:schedule_recorder/widgets/schedule_page/recording_buttons.dart';
 
 import 'main_test.mocks.dart';
@@ -82,6 +84,12 @@ void main() {
         home: SchedulePage(
           recorder: mockRecorder,
           player: mockPlayer,
+          fileManagementService: FileManagementService(
+            logger: Logger(),
+            documentsPath: '/test/path',
+          ),
+          documentsPath: '/test/path',
+          logger: Logger(),
         ),
       ),
     );
@@ -115,6 +123,12 @@ void main() {
         home: SchedulePage(
           recorder: mockRecorder,
           player: mockPlayer,
+          fileManagementService: FileManagementService(
+            logger: Logger(),
+            documentsPath: '/test/path',
+          ),
+          documentsPath: '/test/path',
+          logger: Logger(),
         ),
       ));
 
@@ -146,6 +160,12 @@ void main() {
         home: SchedulePage(
           recorder: mockRecorder,
           player: mockPlayer,
+          fileManagementService: FileManagementService(
+            logger: Logger(),
+            documentsPath: '/test/path',
+          ),
+          documentsPath: '/test/path',
+          logger: Logger(),
         ),
       ));
 

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logger/logger.dart';
@@ -11,6 +12,11 @@ import 'package:schedule_recorder/services/schedule_page/file_receiver_service.d
 
 import 'file_receiver_service_test.mocks.dart';
 
+@GenerateNiceMocks([
+  MockSpec<Logger>(),
+  MockSpec<Directory>(),
+  MockSpec<File>(),
+])
 class MockPathProviderPlatform extends Mock
     with MockPlatformInterfaceMixin
     implements PathProviderPlatform {
@@ -18,114 +24,270 @@ class MockPathProviderPlatform extends Mock
   Future<String?> getApplicationDocumentsPath() async => '/test/path';
 }
 
-@GenerateNiceMocks([
-  MockSpec<Logger>(),
-  MockSpec<Directory>(),
-  MockSpec<File>(),
-])
+class MockFileFactory {
+  static final Map<String, MockFile> _files = {};
+
+  static MockFile getMockFile(String path) {
+    return _files.putIfAbsent(path, () {
+      final mockFile = MockFile();
+      when(mockFile.path).thenReturn(path);
+      when(mockFile.exists()).thenAnswer((_) => Future.value(true));
+      when(mockFile.readAsBytes())
+          .thenAnswer((_) => Future.value(Uint8List.fromList([1, 2, 3, 4, 5])));
+      when(mockFile.writeAsBytes(any, flush: anyNamed('flush')))
+          .thenAnswer((_) => Future.value(mockFile));
+      return mockFile;
+    });
+  }
+
+  static void reset() {
+    _files.clear();
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late FileReceiverService service;
-  late Logger mockLogger;
-  late File mockFile;
+  late MockLogger mockLogger;
+  late MockFile mockFile;
 
   setUp(() {
+    MockFileFactory.reset();
     PathProviderPlatform.instance = MockPathProviderPlatform();
     mockLogger = MockLogger();
     mockFile = MockFile();
-    service = FileReceiverService(logger: mockLogger);
+
+    // デフォルトのモック設定
+    when(mockLogger.i(any,
+            time: anyNamed('time'),
+            error: anyNamed('error'),
+            stackTrace: anyNamed('stackTrace')))
+        .thenReturn(null);
+    when(mockLogger.w(any,
+            time: anyNamed('time'),
+            error: anyNamed('error'),
+            stackTrace: anyNamed('stackTrace')))
+        .thenReturn(null);
+    when(mockLogger.e(any,
+            time: anyNamed('time'),
+            error: anyNamed('error'),
+            stackTrace: anyNamed('stackTrace')))
+        .thenReturn(null);
+
+    // ファイルの基本設定
+    when(mockFile.path).thenReturn('/test/source/test.m4a');
+    when(mockFile.exists()).thenAnswer((_) => Future.value(true));
+    when(mockFile.readAsBytes())
+        .thenAnswer((_) => Future.value(Uint8List.fromList([1, 2, 3, 4, 5])));
+
+    service = FileReceiverService(
+      logger: mockLogger,
+    );
+
+    // 初期化時のログ出力をverify
+    verify(mockLogger.i('Initializing file receiver...',
+            time: null, error: null, stackTrace: null))
+        .called(1);
+  });
+
+  tearDown(() async {
+    await service.dispose();
   });
 
   group('FileReceiverService', () {
+    test('ファイルのコピーが成功すること', () async {
+      // コピー先のモックファイルを準備
+      final mockDestFile = MockFile();
+      when(mockDestFile.path).thenReturn('/test/path/newfile.m4a');
+      when(mockDestFile.exists()).thenAnswer((_) => Future.value(false));
+      when(mockDestFile.writeAsBytes(any, flush: true))
+          .thenAnswer((_) => Future.value(mockDestFile));
+      when(mockDestFile.readAsBytes())
+          .thenAnswer((_) => Future.value(Uint8List.fromList([1, 2, 3, 4, 5])));
+
+      // ソースファイルの設定
+      when(mockFile.exists()).thenAnswer((_) => Future.value(true));
+      when(mockFile.readAsBytes())
+          .thenAnswer((_) => Future.value(Uint8List.fromList([1, 2, 3, 4, 5])));
+
+      // File コンストラクタのモックを設定
+      final result = await service.copyFileToDocuments(
+        mockFile,
+        'newfile.m4a',
+        fileFactory: (path) => mockDestFile,
+      );
+
+      expect(result, '/test/path/newfile.m4a');
+      verifyInOrder([
+        mockLogger.i('File size before copy: 5 bytes',
+            time: null, error: null, stackTrace: null),
+        mockLogger.i('File size after copy: 5 bytes',
+            time: null, error: null, stackTrace: null),
+        mockLogger.i('File copied successfully: /test/path/newfile.m4a',
+            time: null, error: null, stackTrace: null),
+      ]);
+    });
+
+    test('ファイルのコピーが失敗した場合、例外をスローすること', () async {
+      final expectedError = Exception('コピーエラー');
+      when(mockFile.exists()).thenAnswer((_) => Future.value(true));
+      when(mockFile.readAsBytes()).thenThrow(expectedError);
+
+      await expectLater(
+        () => service.copyFileToDocuments(mockFile, 'newfile.m4a',
+            fileFactory: (path) => mockFile),
+        throwsA(expectedError),
+      );
+
+      verify(mockLogger.e('Error copying file: $expectedError',
+              time: null, error: null, stackTrace: null))
+          .called(1);
+    });
+
     test('音声ファイルを正しく処理できること', () async {
-      final audioFile = SharedMediaFile(
+      final mockSharedFile = SharedMediaFile(
         path: 'test.m4a',
         type: SharedMediaType.file,
         thumbnail: null,
         duration: null,
       );
-      bool audioCallbackCalled = false;
-      bool logCallbackCalled = false;
+      var audioFileReceived = false;
+
+      when(mockFile.exists()).thenAnswer((_) async => true);
 
       await service.processSharedFiles(
-        [audioFile],
-        (_) => audioCallbackCalled = true,
-        (_) => logCallbackCalled = true,
+        [mockSharedFile],
+        (file) async {
+          audioFileReceived = true;
+        },
+        (file) async {},
+        fileFactory: (path) => mockFile,
       );
 
-      expect(audioCallbackCalled, true);
-      expect(logCallbackCalled, false);
-      verify(mockLogger.i('共有されたファイルの処理を開始: 1個のファイル')).called(1);
-      verify(mockLogger.i('音声ファイルを受信: test.m4a')).called(1);
+      expect(audioFileReceived, true);
+      verifyInOrder([
+        mockLogger.i('Processing 1 files...',
+            time: null, error: null, stackTrace: null),
+        mockLogger.i('Processing file: test.m4a',
+            time: null, error: null, stackTrace: null),
+        mockLogger.i('File extension: m4a',
+            time: null, error: null, stackTrace: null),
+        mockLogger.i('Processing audio file: test.m4a',
+            time: null, error: null, stackTrace: null),
+      ]);
     });
 
     test('ログファイルを正しく処理できること', () async {
-      final logFile = SharedMediaFile(
+      final mockSharedFile = SharedMediaFile(
         path: 'test.log',
-        type: SharedMediaType.text,
+        type: SharedMediaType.file,
         thumbnail: null,
         duration: null,
       );
-      bool audioCallbackCalled = false;
-      bool logCallbackCalled = false;
+      var logFileReceived = false;
+
+      final mockLogFile = MockFile();
+      when(mockLogFile.path).thenReturn('test.log');
+      when(mockLogFile.exists()).thenAnswer((_) async => true);
+      when(mockLogFile.readAsBytes())
+          .thenAnswer((_) => Future.value(Uint8List.fromList([1, 2, 3, 4, 5])));
 
       await service.processSharedFiles(
-        [logFile],
-        (_) => audioCallbackCalled = true,
-        (_) => logCallbackCalled = true,
+        [mockSharedFile],
+        (file) async {},
+        (file) async {
+          logFileReceived = true;
+        },
+        fileFactory: (path) => mockLogFile,
       );
 
-      expect(audioCallbackCalled, false);
-      expect(logCallbackCalled, true);
-      verify(mockLogger.i('共有されたファイルの処理を開始: 1個のファイル')).called(1);
-      verify(mockLogger.i('ログファイルを受信: test.log')).called(1);
+      expect(logFileReceived, true);
+      verifyInOrder([
+        mockLogger.i('Processing 1 files...',
+            time: null, error: null, stackTrace: null),
+        mockLogger.i('Processing file: test.log',
+            time: null, error: null, stackTrace: null),
+        mockLogger.i('File extension: log',
+            time: null, error: null, stackTrace: null),
+        mockLogger.i('Processing log file: test.log',
+            time: null, error: null, stackTrace: null),
+      ]);
     });
 
     test('未対応の拡張子のファイルを適切に処理できること', () async {
-      final unknownFile = SharedMediaFile(
-        path: 'test.xyz',
-        type: SharedMediaType.image,
+      final mockSharedFile = SharedMediaFile(
+        path: 'test.pdf',
+        type: SharedMediaType.file,
         thumbnail: null,
         duration: null,
       );
-      bool audioCallbackCalled = false;
-      bool logCallbackCalled = false;
+
+      final mockXyzFile = MockFile();
+      when(mockXyzFile.path).thenReturn('test.pdf');
+      when(mockXyzFile.exists()).thenAnswer((_) async => true);
+      when(mockXyzFile.readAsBytes())
+          .thenAnswer((_) => Future.value(Uint8List.fromList([1, 2, 3, 4, 5])));
 
       await service.processSharedFiles(
-        [unknownFile],
-        (_) => audioCallbackCalled = true,
-        (_) => logCallbackCalled = true,
+        [mockSharedFile],
+        (file) async {},
+        (file) async {},
+        fileFactory: (path) => mockXyzFile,
       );
 
-      expect(audioCallbackCalled, false);
-      expect(logCallbackCalled, false);
-      verify(mockLogger.i('共有されたファイルの処理を開始: 1個のファイル')).called(1);
-      verify(mockLogger.w('未対応のファイル形式: test.xyz')).called(1);
+      verifyInOrder([
+        mockLogger.i('Processing 1 files...',
+            time: null, error: null, stackTrace: null),
+        mockLogger.i('Processing file: test.pdf',
+            time: null, error: null, stackTrace: null),
+        mockLogger.i('File extension: pdf',
+            time: null, error: null, stackTrace: null),
+        mockLogger.w('Unsupported file extension: pdf',
+            time: null, error: null, stackTrace: null),
+      ]);
     });
 
-    test('ファイルのコピーが成功すること', () async {
-      when(mockFile.copy('/test/path/newfile.m4a'))
-          .thenAnswer((_) => Future.value(mockFile));
-      when(mockLogger.i(any)).thenReturn(null);
-
-      final result = await service.copyFileToDocuments(mockFile, 'newfile.m4a');
-
-      expect(result, '/test/path/newfile.m4a');
-      verify(mockLogger.i('ファイルをコピーしました: /test/path/newfile.m4a')).called(1);
-    });
-
-    test('ファイルのコピーが失敗した場合、例外をスローすること', () async {
-      final expectedError = Exception('コピーエラー');
-      when(mockFile.copy('/test/path/newfile.m4a')).thenThrow(expectedError);
-      when(mockLogger.e(any)).thenReturn(null);
-
-      await expectLater(
-        () => service.copyFileToDocuments(mockFile, 'newfile.m4a'),
-        throwsA(expectedError),
+    test('存在しないファイルを適切に処理できること', () async {
+      final mockSharedFile = SharedMediaFile(
+        path: 'test.m4a',
+        type: SharedMediaType.file,
+        thumbnail: null,
+        duration: null,
       );
 
-      verify(mockLogger.e('ファイルのコピーに失敗: $expectedError')).called(1);
+      when(mockFile.exists()).thenAnswer((_) async => false);
+
+      await service.processSharedFiles(
+        [mockSharedFile],
+        (file) async {},
+        (file) async {},
+        fileFactory: (path) => mockFile,
+      );
+
+      verify(mockLogger.w('File does not exist: test.m4a',
+              time: null, error: null, stackTrace: null))
+          .called(1);
+    });
+
+    test('空のファイルパスを適切に処理できること', () async {
+      final mockSharedFile = SharedMediaFile(
+        path: '',
+        type: SharedMediaType.file,
+        thumbnail: null,
+        duration: null,
+      );
+
+      await service.processSharedFiles(
+        [mockSharedFile],
+        (file) async {},
+        (file) async {},
+        fileFactory: (path) => mockFile,
+      );
+
+      verify(mockLogger.w('Empty file path',
+              time: null, error: null, stackTrace: null))
+          .called(1);
     });
   });
 }

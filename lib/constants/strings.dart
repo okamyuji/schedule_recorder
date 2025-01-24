@@ -19,6 +19,9 @@ class Strings {
   static const errorRecordingStartFailed = '録音の開始に失敗しました';
   static const errorRecordingPauseFailed = '録音の一時停止に失敗しました';
   static const errorRecordingResumeFailed = '録音の再開に失敗しました';
+  static const errorLoadingFiles = 'ファイル一覧の取得に失敗しました';
+  static const errorPlayingFile = '再生に失敗しました';
+  static const errorDeletingFile = '削除に失敗しました';
 
   // 通知メッセージ
   static const notifyRecordingPaused = '録音を一時停止しました';

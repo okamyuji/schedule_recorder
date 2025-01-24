@@ -1,12 +1,20 @@
 import 'package:flutter/services.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
 
 class AudioService {
   static const MethodChannel _channel =
       MethodChannel('com.example.schedule_recorder/audio');
 
-  /// ロガー
-  static final Logger _logger = Logger();
+  static final Logger _staticLogger = Logger();
+  final Logger _logger;
+  final AudioPlayer _player;
+
+  AudioService({
+    required AudioPlayer player,
+    required Logger logger,
+  })  : _player = player,
+        _logger = logger;
 
   /// ネイティブリスナーの設定
   ///
@@ -19,20 +27,33 @@ class AudioService {
     _channel.setMethodCallHandler((call) async {
       switch (call.method) {
         case 'RecordingInterrupted':
-          _logger.w('Received RecordingInterrupted event');
+          _staticLogger.w('Received RecordingInterrupted event');
           onInterrupted();
           return;
         case 'RecordingResumed':
-          _logger.i('Received RecordingResumed event');
+          _staticLogger.i('Received RecordingResumed event');
           onResumed();
           return;
         default:
-          _logger.e('Unknown method: ${call.method}');
+          _staticLogger.e('Unknown method: ${call.method}');
           throw PlatformException(
             code: 'UNSUPPORTED_METHOD',
             message: 'Unknown method: ${call.method}',
           );
       }
     });
+  }
+
+  Future<void> startPlaying(String path) async {
+    try {
+      _logger.i('Starting playback...');
+      await _player.setVolume(1.0);
+      await _player.setFilePath(path);
+      await _player.play();
+      _logger.i('Playback started');
+    } catch (e) {
+      _logger.e('再生開始エラー: $e');
+      rethrow;
+    }
   }
 }
