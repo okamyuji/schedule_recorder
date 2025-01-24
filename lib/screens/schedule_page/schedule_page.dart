@@ -9,8 +9,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:schedule_recorder/services/schedule_page/audio_service.dart';
+import 'package:schedule_recorder/services/schedule_page/file_sharing_service.dart';
 import 'package:schedule_recorder/widgets/schedule_page/recording_buttons.dart';
-import 'package:share_plus/share_plus.dart';
 
 final logger = Logger(
   filter: ProductionFilter(),
@@ -53,11 +53,13 @@ class CustomFileOutput extends LogOutput {
 class SchedulePage extends StatefulWidget {
   final AudioRecorder recorder;
   final AudioPlayer player;
+  final FileSharingService? fileSharingService;
 
   const SchedulePage({
     super.key,
     required this.recorder,
     required this.player,
+    this.fileSharingService,
   });
 
   @override
@@ -71,10 +73,13 @@ class SchedulePageState extends State<SchedulePage> {
   String? _recordingPath;
   bool _isInitialized = false;
   late final String _logPath;
+  late final FileSharingService _fileSharingService;
 
   @override
   void initState() {
     super.initState();
+    _fileSharingService =
+        widget.fileSharingService ?? FileSharingService(logger: logger);
     _initializeLogger();
     _initializeRecorder().then((_) {
       if (mounted) {
@@ -381,45 +386,14 @@ class SchedulePageState extends State<SchedulePage> {
 
   Future<void> _shareFiles() async {
     try {
-      logger.w('ファイル共有を開始します');
-      final appDir = await getApplicationDocumentsDirectory();
-      final recordingPath = path.join(appDir.path, 'recording.m4a');
-      final logFile = File(_logPath);
-      final recordingFile = File(recordingPath);
-
-      if (!recordingFile.existsSync() && !logFile.existsSync()) {
-        logger.e('共有可能なファイルが見つかりません');
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('共有できるファイルがありません')),
-        );
-        return;
-      }
-
-      final files = <XFile>[];
-
-      // 録音ファイルの追加
-      if (recordingFile.existsSync()) {
-        logger.w('録音ファイルを共有リストに追加: $recordingPath');
-        files.add(XFile(recordingPath, mimeType: 'audio/mp4'));
-      }
-
-      // ログファイルの追加
-      if (logFile.existsSync()) {
-        logger.w('ログファイルを共有リストに追加: $_logPath');
-        files.add(XFile(_logPath, mimeType: 'text/plain'));
-      }
-
-      await Share.shareXFiles(
-        files,
-        subject: '録音データとログ',
+      await _fileSharingService.shareFiles(
+        context: context,
+        logPath: _logPath,
       );
-      logger.w('ファイル共有が完了しました');
-    } catch (e) {
-      logger.e('ファイル共有に失敗しました: $e');
+    } on ShareFilesException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ファイルの共有に失敗しました')),
+        SnackBar(content: Text(e.toString())),
       );
     }
   }
