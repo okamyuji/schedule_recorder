@@ -24,8 +24,12 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
     - 録音した音声データを再生。
 - エラーハンドリング
     - 不明な操作やエラーを適切に通知。
-- プラットフォーム独立性
-    - Flutterを採用することで、Androidでも同様の操作性を提供。
+- ログ機能
+    - アプリケーションの動作状況を詳細に記録。
+    - デバッグやトラブルシューティングに活用可能。
+- 状態管理
+    - Riverpodを使用した効率的な状態管理。
+    - 予測可能で安全な状態の更新。
 
 ## iOS固有の設定
 
@@ -220,6 +224,10 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
     - UIとロジックを分離して、テスト可能性と保守性を向上。
 - サービスレイヤー
     - AudioServiceを用いて、音声録音・再生機能を統一的に管理。
+    - FileSharingServiceによるファイル共有機能の提供。
+- 状態管理
+    - Riverpodを採用し、アプリケーション全体の状態を効率的に管理。
+    - Provider、StateNotifier、StateProviderを使用した適切な状態管理の実装。
 - NativeとFlutterの連携
     - MethodChannelを活用して、FlutterとiOSのネイティブコードを効率的に接続。
     - swiftのコードは`ios/Runner/AppDelegate.swift`を参照してください。
@@ -228,9 +236,13 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
 
 - `SchedulePage`: ユーザーインターフェースを管理。
 - `AudioService`: 録音・再生のロジックを提供。
-- `FlutterSound`: 録音・再生のためのプラグインを使用。
+- `FileSharingService`: ファイル共有機能を管理。
+- `RecordingButtons`: 録音関連のUIコンポーネントを提供。
+- `AudioFileList`: 録音ファイルの一覧表示を管理。
 
-### iOS向け設計
+### 依存パッケージ
+
+主要な依存パッケージとその用途：
 
 - MethodChannelによるNative APIの呼び出し
     - 録音イベント（中断・再開）をハンドリング。
@@ -239,14 +251,24 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
 
 ## テスト
 
-### ユニットテスト
+### テストの種類
+
+1. ウィジェットテスト
+   - `RecordingButtons`のUI操作テスト
+   - `AudioFileList`の表示テスト
+   - 状態変更時のUI更新テスト
+
+2. ユニットテスト
+   - `AudioService`のメソッドテスト
+   - `FileSharingService`の機能テスト
+   - Riverpodプロバイダーのテスト
 
 - 録音と再生のボタン操作
     - UI操作をモックして、各状態が正しく遷移するかを確認。
 - AudioServiceのメソッドテスト
     - iOSのネイティブイベント（例: `RecordingInterrupted`）が正しくハンドリングされることを確認。
 
-### 実行方法
+### テスト実行方法
 
 ```bash
 # ユニットテストに必要なMockを作成する
@@ -254,6 +276,10 @@ dart run build_runner build --delete-conflicting-outputs
 
 # ユニットテストを実行する
 flutter test
+
+# 特定のテストファイルを実行
+flutter test test/widgets/schedule_page/recording_buttons_test.dart
+flutter test test/widgets/schedule_page/audio_file_list_test.dart
 ```
 
 ## インストールとセットアップ
