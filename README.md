@@ -13,8 +13,8 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
 - 録音の中断・再開
     - iOSのシステムイベント（例: 着信）にも対応し、録音を中断・再開する機能を提供しています。
 - ファイル共有機能
-    - iTunesまたはFinderを介したファイル共有に対応
-    - 他のアプリとの音声ファイルおよびログファイルの共有が可能
+    - ファイル共有に対応
+    - 他のアプリとの音声ファイルの共有が可能
 
 ### 全般的な機能
 
@@ -94,22 +94,6 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
     </array>
     ```
 
-5. URLスキームの設定
-
-    ```xml
-    <key>CFBundleURLTypes</key>
-    <array>
-        <dict>
-            <key>CFBundleURLSchemes</key>
-            <array>
-                <string>schedulerecorder</string>
-            </array>
-            <key>CFBundleURLName</key>
-            <string>com.example.scheduleRecorder</string>
-        </dict>
-    </array>
-    ```
-
 ### 設定の効果
 
 1. マイク使用権限
@@ -127,10 +111,6 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
    - 音声ファイル（.m4a, .mp3）の共有メニューにアプリが表示
    - テキストファイル（.txt, .log）の共有メニューにアプリが表示
    - これらのファイルを開くアプリとして選択可能に
-
-5. URLスキーム
-   - `schedulerecorder://` スキームでアプリを起動可能に
-   - 他のアプリからの連携が可能に
 
 ## 機能概要
 
