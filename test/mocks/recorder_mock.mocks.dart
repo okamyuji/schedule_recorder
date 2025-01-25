@@ -27,7 +27,7 @@ import 'package:record_platform_interface/record_platform_interface.dart'
 
 class _FakeAmplitude_0 extends _i1.SmartFake implements _i2.Amplitude {
   _FakeAmplitude_0(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
+      : super(parent, parentInvocation);
 }
 
 /// A class which mocks [AudioRecorder].
@@ -41,133 +41,107 @@ class MockAudioRecorder extends _i1.Mock implements _i3.AudioRecorder {
   @override
   _i4.Future<void> start(_i2.RecordConfig? config, {required String? path}) =>
       (super.noSuchMethod(
-            Invocation.method(#start, [config], {#path: path}),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+        Invocation.method(#start, [config], {#path: path}),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
 
   @override
   _i4.Future<_i4.Stream<_i5.Uint8List>> startStream(_i2.RecordConfig? config) =>
       (super.noSuchMethod(
-            Invocation.method(#startStream, [config]),
-            returnValue: _i4.Future<_i4.Stream<_i5.Uint8List>>.value(
-              _i4.Stream<_i5.Uint8List>.empty(),
-            ),
-          )
-          as _i4.Future<_i4.Stream<_i5.Uint8List>>);
+        Invocation.method(#startStream, [config]),
+        returnValue: _i4.Future<_i4.Stream<_i5.Uint8List>>.value(
+          _i4.Stream<_i5.Uint8List>.empty(),
+        ),
+      ) as _i4.Future<_i4.Stream<_i5.Uint8List>>);
 
   @override
-  _i4.Future<String?> stop() =>
-      (super.noSuchMethod(
-            Invocation.method(#stop, []),
-            returnValue: _i4.Future<String?>.value(),
-          )
-          as _i4.Future<String?>);
+  _i4.Future<String?> stop() => (super.noSuchMethod(
+        Invocation.method(#stop, []),
+        returnValue: _i4.Future<String?>.value(),
+      ) as _i4.Future<String?>);
 
   @override
-  _i4.Future<void> cancel() =>
-      (super.noSuchMethod(
-            Invocation.method(#cancel, []),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  _i4.Future<void> cancel() => (super.noSuchMethod(
+        Invocation.method(#cancel, []),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
 
   @override
-  _i4.Future<void> pause() =>
-      (super.noSuchMethod(
-            Invocation.method(#pause, []),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  _i4.Future<void> pause() => (super.noSuchMethod(
+        Invocation.method(#pause, []),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
 
   @override
-  _i4.Future<void> resume() =>
-      (super.noSuchMethod(
-            Invocation.method(#resume, []),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  _i4.Future<void> resume() => (super.noSuchMethod(
+        Invocation.method(#resume, []),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
 
   @override
-  _i4.Future<bool> isRecording() =>
-      (super.noSuchMethod(
-            Invocation.method(#isRecording, []),
-            returnValue: _i4.Future<bool>.value(false),
-          )
-          as _i4.Future<bool>);
+  _i4.Future<bool> isRecording() => (super.noSuchMethod(
+        Invocation.method(#isRecording, []),
+        returnValue: _i4.Future<bool>.value(false),
+      ) as _i4.Future<bool>);
 
   @override
-  _i4.Future<bool> isPaused() =>
-      (super.noSuchMethod(
-            Invocation.method(#isPaused, []),
-            returnValue: _i4.Future<bool>.value(false),
-          )
-          as _i4.Future<bool>);
+  _i4.Future<bool> isPaused() => (super.noSuchMethod(
+        Invocation.method(#isPaused, []),
+        returnValue: _i4.Future<bool>.value(false),
+      ) as _i4.Future<bool>);
 
   @override
-  _i4.Future<bool> hasPermission() =>
-      (super.noSuchMethod(
-            Invocation.method(#hasPermission, []),
-            returnValue: _i4.Future<bool>.value(false),
-          )
-          as _i4.Future<bool>);
+  _i4.Future<bool> hasPermission() => (super.noSuchMethod(
+        Invocation.method(#hasPermission, []),
+        returnValue: _i4.Future<bool>.value(false),
+      ) as _i4.Future<bool>);
 
   @override
-  _i4.Future<List<_i2.InputDevice>> listInputDevices() =>
-      (super.noSuchMethod(
-            Invocation.method(#listInputDevices, []),
-            returnValue: _i4.Future<List<_i2.InputDevice>>.value(
-              <_i2.InputDevice>[],
-            ),
-          )
-          as _i4.Future<List<_i2.InputDevice>>);
+  _i4.Future<List<_i2.InputDevice>> listInputDevices() => (super.noSuchMethod(
+        Invocation.method(#listInputDevices, []),
+        returnValue: _i4.Future<List<_i2.InputDevice>>.value(
+          <_i2.InputDevice>[],
+        ),
+      ) as _i4.Future<List<_i2.InputDevice>>);
 
   @override
-  _i4.Future<_i2.Amplitude> getAmplitude() =>
-      (super.noSuchMethod(
-            Invocation.method(#getAmplitude, []),
-            returnValue: _i4.Future<_i2.Amplitude>.value(
-              _FakeAmplitude_0(this, Invocation.method(#getAmplitude, [])),
-            ),
-          )
-          as _i4.Future<_i2.Amplitude>);
+  _i4.Future<_i2.Amplitude> getAmplitude() => (super.noSuchMethod(
+        Invocation.method(#getAmplitude, []),
+        returnValue: _i4.Future<_i2.Amplitude>.value(
+          _FakeAmplitude_0(this, Invocation.method(#getAmplitude, [])),
+        ),
+      ) as _i4.Future<_i2.Amplitude>);
 
   @override
   _i4.Future<bool> isEncoderSupported(_i2.AudioEncoder? encoder) =>
       (super.noSuchMethod(
-            Invocation.method(#isEncoderSupported, [encoder]),
-            returnValue: _i4.Future<bool>.value(false),
-          )
-          as _i4.Future<bool>);
+        Invocation.method(#isEncoderSupported, [encoder]),
+        returnValue: _i4.Future<bool>.value(false),
+      ) as _i4.Future<bool>);
 
   @override
-  _i4.Future<void> dispose() =>
-      (super.noSuchMethod(
-            Invocation.method(#dispose, []),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  _i4.Future<void> dispose() => (super.noSuchMethod(
+        Invocation.method(#dispose, []),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
 
   @override
-  _i4.Stream<_i2.RecordState> onStateChanged() =>
-      (super.noSuchMethod(
-            Invocation.method(#onStateChanged, []),
-            returnValue: _i4.Stream<_i2.RecordState>.empty(),
-          )
-          as _i4.Stream<_i2.RecordState>);
+  _i4.Stream<_i2.RecordState> onStateChanged() => (super.noSuchMethod(
+        Invocation.method(#onStateChanged, []),
+        returnValue: _i4.Stream<_i2.RecordState>.empty(),
+      ) as _i4.Stream<_i2.RecordState>);
 
   @override
   _i4.Stream<_i2.Amplitude> onAmplitudeChanged(Duration? interval) =>
       (super.noSuchMethod(
-            Invocation.method(#onAmplitudeChanged, [interval]),
-            returnValue: _i4.Stream<_i2.Amplitude>.empty(),
-          )
-          as _i4.Stream<_i2.Amplitude>);
+        Invocation.method(#onAmplitudeChanged, [interval]),
+        returnValue: _i4.Stream<_i2.Amplitude>.empty(),
+      ) as _i4.Stream<_i2.Amplitude>);
 
   @override
   List<int> convertBytesToInt16(
@@ -175,8 +149,7 @@ class MockAudioRecorder extends _i1.Mock implements _i3.AudioRecorder {
     dynamic endian = _i5.Endian.little,
   ]) =>
       (super.noSuchMethod(
-            Invocation.method(#convertBytesToInt16, [bytes, endian]),
-            returnValue: <int>[],
-          )
-          as List<int>);
+        Invocation.method(#convertBytesToInt16, [bytes, endian]),
+        returnValue: <int>[],
+      ) as List<int>);
 }
