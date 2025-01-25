@@ -33,7 +33,7 @@ class FileManagementService {
           .map((file) => AudioFile.fromFile(file as File))
           .toList();
 
-      _logger.i('${files.length} 個の音声ファイルを検出しました');
+      _logger.i('${files.length} 個の音声ファイルが検出されました');
       return files;
     } catch (e) {
       _logger.e('ファイル一覧の取得に失敗しました: $e');
@@ -50,7 +50,7 @@ class FileManagementService {
       await file.delete();
       _logger.i('ファイルを削除しました: $path');
     } catch (e) {
-      _logger.e('ファイル削除に失敗しました: $path, エラー: $e');
+      _logger.e('ファイルの削除に失敗しました: $path, エラー: $e');
       rethrow;
     }
   }

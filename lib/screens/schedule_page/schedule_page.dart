@@ -65,7 +65,7 @@ class CustomFileOutput extends LogOutput {
 
         file.writeAsStringSync(logEntry, mode: FileMode.append, flush: true);
       } catch (e) {
-        debugPrint('ログファイルへの書き込みに失敗: $e');
+        debugPrint('ログファイルへの書き込みに失敗しました: $e');
       }
     });
   }
@@ -138,7 +138,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
       }
       _audioService.setupNativeListeners();
     }).catchError((e) {
-      widget.logger.e('Recorder initialization error: $e');
+      widget.logger.e('Recorderの初期化に失敗しました: $e');
     });
   }
 
@@ -156,7 +156,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
         ..i('アプリバージョン: ${await _getAppVersion()}')
         ..i('デバイス情報: ${await _getDeviceInfo()}');
     } catch (e) {
-      debugPrint('ログ初期化エラー: $e');
+      debugPrint('ロガーの初期化に失敗しました: $e');
     }
   }
 
@@ -180,7 +180,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
       }
       return 'Unknown';
     } catch (e) {
-      return 'Error getting device info';
+      return 'デバイス情報の取得に失敗しました';
     }
   }
 
@@ -189,21 +189,21 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
   /// 戻り値: 録音機器のパス
   Future<void> _initializeRecorder() async {
     try {
-      widget.logger.i('Initializing recorder...');
+      widget.logger.i('Recorderの初期化を開始します');
       final status = await Permission.microphone.request();
       if (!status.isGranted) {
-        widget.logger.e('マイクの権限が付与されていません');
+        widget.logger.e('マイクの権限が許可されていません');
         return; // 権限がない場合、早期リターン
       }
-      widget.logger.i('Microphone permission granted');
+      widget.logger.i('マイクの権限が許可されました');
 
       final dir = await getApplicationDocumentsDirectory();
       _recordingPath = '${dir.path}/recording.m4a';
-      widget.logger.i('Recording path set to: $_recordingPath');
+      widget.logger.i('Recorderのパスを設定します: $_recordingPath');
 
-      widget.logger.i('Recorder initialization completed successfully');
+      widget.logger.i('Recorderの初期化が完了しました');
     } catch (e) {
-      widget.logger.e('Recorder initialization error: $e');
+      widget.logger.e('Recorderの初期化に失敗しました: $e');
     }
   }
 
@@ -213,12 +213,12 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
   Future<void> _startRecording() async {
     if (_recordState == RecordState.stop && _recordingPath != null) {
       try {
-        widget.logger.i('Starting recording...');
+        widget.logger.i('録音を開始します');
         await _audioService.startRecording(_recordingPath!);
         setState(() {
           _recordState = RecordState.record;
         });
-        widget.logger.i('Recording started successfully');
+        widget.logger.i('録音が開始されました');
       } catch (e) {
         widget.logger.e('録音の開始に失敗しました: $e');
         setState(() {
@@ -235,15 +235,15 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
   Future<void> _stopRecording() async {
     if (_recordState != RecordState.stop) {
       try {
-        widget.logger.i('Stopping recording...');
+        widget.logger.i('録音を停止します');
         await _audioService.stopRecording();
         setState(() {
           _recordState = RecordState.stop;
         });
         await _loadAudioFiles();
-        widget.logger.i('Recording stopped successfully');
+        widget.logger.i('録音が停止されました');
       } catch (e) {
-        widget.logger.e('録音停止エラー: $e');
+        widget.logger.e('録音の停止に失敗しました: $e');
         rethrow;
       }
     }
@@ -255,7 +255,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
   Future<void> _startPlaying() async {
     if (!isPlaying && _recordingPath != null) {
       try {
-        widget.logger.i('Starting playback...');
+        widget.logger.i('再生を開始します');
         setState(() {
           isRecording = false;
           isPaused = false;
@@ -272,7 +272,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
 
         widget.player.playerStateStream.listen((state) {
           if (state.processingState == ProcessingState.completed) {
-            widget.logger.i('Playback finished');
+            widget.logger.i('再生が完了しました');
             if (mounted) {
               setState(() {
                 isPlaying = false;
@@ -282,9 +282,9 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
         });
 
         await widget.player.play();
-        widget.logger.i('Playback started');
+        widget.logger.i('再生が開始されました');
       } catch (e) {
-        widget.logger.e('再生開始エラー: $e');
+        widget.logger.e('再生の開始に失敗しました: $e');
         if (mounted) {
           setState(() {
             isPlaying = false;
@@ -300,16 +300,16 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
   Future<void> _stopPlaying() async {
     if (isPlaying) {
       try {
-        widget.logger.i('Stopping playback...');
+        widget.logger.i('再生を停止します');
         await widget.player.stop();
         if (mounted) {
           setState(() {
             isPlaying = false;
           });
         }
-        widget.logger.i('Playback stopped');
+        widget.logger.i('再生が停止されました');
       } catch (e) {
-        widget.logger.e('再生停止エラー: $e');
+        widget.logger.e('再生の停止に失敗しました: $e');
       }
     }
   }
@@ -318,14 +318,14 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
   Future<void> _pauseRecording() async {
     if (_recordState == RecordState.record) {
       try {
-        widget.logger.i('Pausing recording...');
+        widget.logger.i('録音を一時停止します');
         await _audioService.pauseRecording();
         setState(() {
           _recordState = RecordState.pause;
         });
-        widget.logger.i('Recording paused successfully');
+        widget.logger.i('録音が一時停止されました');
       } catch (e) {
-        widget.logger.e('録音一時停止エラー: $e');
+        widget.logger.e('録音の一時停止に失敗しました: $e');
         rethrow;
       }
     }
@@ -335,14 +335,14 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
   Future<void> _resumeRecording() async {
     if (_recordState == RecordState.pause) {
       try {
-        widget.logger.i('Resuming recording...');
+        widget.logger.i('録音を再開します');
         await _audioService.resumeRecording();
         setState(() {
           _recordState = RecordState.record;
         });
-        widget.logger.i('Recording resumed successfully');
+        widget.logger.i('録音が再開されました');
       } catch (e) {
-        widget.logger.e('録音再開エラー: $e');
+        widget.logger.e('録音の再開に失敗しました: $e');
         rethrow;
       }
     }
@@ -358,7 +358,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
     }
     widget.recorder.dispose();
     widget.player.dispose();
-    widget.logger.i('Recorder and Player disposed');
+    widget.logger.i('RecorderとPlayerが破棄されました');
     super.dispose();
   }
 
@@ -370,12 +370,12 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Schedule Recorder'),
+        title: const Text(Strings.appTitle),
         actions: [
           if (_isInitialized && !isRecording)
             IconButton(
               icon: const Icon(Icons.share),
-              tooltip: 'ファイルを共有',
+              tooltip: Strings.shareButtonTooltip,
               onPressed: _shareFiles,
             ),
         ],
@@ -469,23 +469,23 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
   /// 戻り値: ファイル一覧の取得結果
   Future<void> _loadAudioFiles() async {
     try {
-      widget.logger.i('ファイル一覧の取得を開始');
+      widget.logger.i('ファイル一覧の取得を開始します');
       final files = await _fileManagementService.getAudioFiles();
-      widget.logger.i('取得したファイル数: ${files.length}');
+      widget.logger.i('${files.length}件のファイルを取得しました');
 
       for (final file in files) {
         widget.logger.i('- パス: ${file.path}');
-        widget.logger.i('  名前: ${file.name}');
+        widget.logger.i('  ファイル名: ${file.name}');
         widget.logger.i('  作成日時: ${file.createdAt}');
-        widget.logger.i('  共有ファイル: ${file.isShared}');
+        widget.logger.i('  共有: ${file.isShared}');
       }
 
       setState(() {
         _audioFiles = files;
       });
-      widget.logger.i('ファイル一覧の更新が完了');
+      widget.logger.i('ファイル一覧の更新が完了しました');
     } catch (e, stackTrace) {
-      widget.logger.e('ファイル一覧の取得に失敗: $e\nスタックトレース: $stackTrace');
+      widget.logger.e('ファイル一覧の取得に失敗しました: $e\nスタックトレース: $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(Strings.errorLoadingFiles)),
@@ -501,7 +501,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
     try {
       await _audioService.startPlaying(file.path);
     } catch (e) {
-      widget.logger.e('再生に失敗しました: $e');
+      widget.logger.e('再生の開始に失敗しました: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(Strings.errorPlayingFile)),

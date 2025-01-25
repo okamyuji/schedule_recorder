@@ -115,8 +115,7 @@ class AudioService {
 
   void _updateRecordState(RecordState recordState) {
     _audioServiceNotifier.updateRecordState(recordState);
-    _logger
-        .i(_formatLogMessage('Record state changed to: ${recordState.name}'));
+    _logger.i('録音状態が変更されました: ${recordState.name}');
 
     switch (recordState) {
       case RecordState.pause:
@@ -147,28 +146,28 @@ class AudioService {
       try {
         switch (call.method) {
           case 'RecordingInterrupted':
-            _logger.w(_formatLogMessage('Received RecordingInterrupted event'));
+            _logger.w('録音中断イベントを受信しました');
             await _handleRecordingInterrupted();
             return null;
           case 'RecordingResumed':
-            _logger.i(_formatLogMessage('Received RecordingResumed event'));
+            _logger.i('録音再開イベントを受信しました');
             await _handleRecordingResumed();
             return null;
           case 'debugLog':
-            _logger.d(_formatLogMessage('Native debug log: ${call.arguments}'));
+            _logger.d('Nativeデバッグログ: ${call.arguments}');
             return null;
           case 'GetRecordState':
-            _logger.d(_formatLogMessage('Getting record state'));
+            _logger.d('録音状態を取得します');
             return _audioServiceNotifier.recordState.name;
           default:
-            _logger.e(_formatLogMessage('Unknown method: ${call.method}'));
+            _logger.e('未知のメソッド: ${call.method}');
             throw PlatformException(
               code: 'UNSUPPORTED_METHOD',
               message: 'Unknown method: ${call.method}',
             );
         }
       } catch (e) {
-        _logger.e(_formatLogMessage('Error handling method call: $e'));
+        _logger.e('メソッド呼び出しエラー: $e');
         rethrow;
       }
     });
@@ -187,9 +186,9 @@ class AudioService {
         path: path,
       );
       _updateRecordState(RecordState.record);
-      _logger.i(_formatLogMessage('Recording started with path: $path'));
+      _logger.i('録音を開始しました: $path');
     } catch (e) {
-      _logger.e(_formatLogMessage('Failed to start recording: $e'));
+      _logger.e('録音の開始に失敗しました: $e');
       rethrow;
     }
   }
@@ -197,17 +196,16 @@ class AudioService {
   /// 手動で録音を一時停止する
   Future<void> pauseRecording() async {
     try {
-      _logger.i(_formatLogMessage('Manually pausing recording...'));
+      _logger.i('録音を手動で一時停止します');
       if (_audioServiceNotifier.recordState == RecordState.record) {
         await _recorder.pause();
         _updateRecordState(RecordState.pause);
-        _logger.i(_formatLogMessage('Recording manually paused'));
+        _logger.i('録音が手動で一時停止されました');
       } else {
-        _logger.w(_formatLogMessage(
-            'Cannot pause - recorder is not in recording state'));
+        _logger.w('録音を一時停止できません - 録音状態ではありません');
       }
     } catch (e) {
-      _logger.e(_formatLogMessage('録音の一時停止に失敗しました: $e'));
+      _logger.e('録音の一時停止に失敗しました: $e');
       rethrow;
     }
   }
@@ -215,17 +213,16 @@ class AudioService {
   /// 手動で録音を再開する
   Future<void> resumeRecording() async {
     try {
-      _logger.i(_formatLogMessage('Manually resuming recording...'));
+      _logger.i('録音を手動で再開します');
       if (_audioServiceNotifier.recordState == RecordState.pause) {
         await _recorder.resume();
         _updateRecordState(RecordState.record);
-        _logger.i(_formatLogMessage('Recording manually resumed'));
+        _logger.i('録音が手動で再開されました');
       } else {
-        _logger.w(_formatLogMessage(
-            'Cannot resume - recorder is not in paused state'));
+        _logger.w('録音を再開できません - 録音状態ではありません');
       }
     } catch (e) {
-      _logger.e(_formatLogMessage('録音の再開に失敗しました: $e'));
+      _logger.e('録音の再開に失敗しました: $e');
       rethrow;
     }
   }
@@ -233,19 +230,17 @@ class AudioService {
   /// 録音を停止する
   Future<void> stopRecording() async {
     try {
-      _logger.i(_formatLogMessage('Stopping recording...'));
+      _logger.i('録音を停止します');
       if (await _recorder.isRecording() ||
           _audioServiceNotifier.recordState == RecordState.pause) {
         final path = await _recorder.stop();
         _updateRecordState(RecordState.stop);
-        _logger.i(_formatLogMessage('Recording saved to: $path'));
-        _logger.i(_formatLogMessage('Recording stopped successfully'));
+        _logger.i('録音が停止されました: $path');
       } else {
-        _logger.w(_formatLogMessage(
-            'Cannot stop - recorder is not recording or paused'));
+        _logger.w('録音を停止できません - 録音状態ではありません');
       }
     } catch (e) {
-      _logger.e(_formatLogMessage('Failed to stop recording: $e'));
+      _logger.e('録音の停止に失敗しました: $e');
       rethrow;
     }
   }
@@ -253,7 +248,7 @@ class AudioService {
   /// 録音の一時停止（通話による中断）
   Future<void> _handleRecordingInterrupted() async {
     try {
-      _logger.i(_formatLogMessage('Handling recording interruption...'));
+      _logger.i('録音中断を処理します');
       _audioServiceNotifier.setHandlingInterruption(true);
 
       // 録音中の場合のみ処理を行う
@@ -262,15 +257,13 @@ class AudioService {
         if (await _channel.invokeMethod<bool>('isPhoneCallActive') ?? false) {
           await _recorder.pause();
           _updateRecordState(RecordState.pause);
-          _logger.i(_formatLogMessage('Recording paused due to phone call'));
+          _logger.i('通話による録音中断が発生しました');
         } else {
-          _logger.i(_formatLogMessage(
-              'Continuing recording - phone call not answered'));
+          _logger.i('通話が終了したため録音を継続します');
         }
       }
     } catch (e) {
-      _logger
-          .e(_formatLogMessage('Failed to handle recording interruption: $e'));
+      _logger.e('録音中断の処理に失敗しました: $e');
       rethrow;
     }
   }
@@ -278,18 +271,18 @@ class AudioService {
   /// 録音の再開（通話終了後）
   Future<void> _handleRecordingResumed() async {
     try {
-      _logger.i(_formatLogMessage('Handling recording resumption...'));
+      _logger.i('録音の再開を処理します');
 
       // 一時停止中の場合のみ再開する
       if (_audioServiceNotifier.recordState == RecordState.pause) {
         await _recorder.resume();
         _updateRecordState(RecordState.record);
-        _logger.i(_formatLogMessage('Recording resumed after phone call'));
+        _logger.i('通話が終了したため録音を再開します');
       }
 
       _audioServiceNotifier.setHandlingInterruption(false);
     } catch (e) {
-      _logger.e(_formatLogMessage('Failed to handle recording resumption: $e'));
+      _logger.e('録音の再開の処理に失敗しました: $e');
       rethrow;
     }
   }
@@ -299,11 +292,11 @@ class AudioService {
   /// [path] - 再生するファイルのパス
   Future<void> startPlaying(String path) async {
     try {
-      _logger.i(_formatLogMessage('Starting playback...'));
+      _logger.i('再生を開始します');
       await _player.setVolume(1.0);
       await _player.setFilePath(path);
       await _player.play();
-      _logger.i(_formatLogMessage('Playback started'));
+      _logger.i('再生が開始されました');
     } catch (e) {
       _logger.e(_formatLogMessage('再生開始エラー: $e'));
       rethrow;
