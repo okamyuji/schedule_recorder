@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:logger/logger.dart';
-import 'package:schedule_recorder/models/audio_file.dart';
+import 'package:schedule_recorder/models/schedule_page/audio_file.dart';
 
 /// ファイル管理サービス
 class FileManagementService {

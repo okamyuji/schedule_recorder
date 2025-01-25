@@ -7,7 +7,7 @@ part of 'recording_state_provider.dart';
 // **************************************************************************
 
 String _$recordingStateNotifierHash() =>
-    r'0de3073ef02f5f74fd3ec758de80405ba2d29fb5';
+    r'cac4e324fdecc99b7eb17f74ec577c343d9c9c32';
 
 /// 録音状態のプロバイダ
 ///
@@ -24,6 +24,5 @@ final recordingStateNotifierProvider = AutoDisposeNotifierProvider<
   allTransitiveDependencies: null,
 );
 
-typedef _$RecordingStateNotifier = AutoDisposeNotifier<RecordingState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

@@ -1,4 +1,5 @@
 import 'package:just_audio/just_audio.dart';
-import 'package:mockito/mockito.dart';
+import 'package:mockito/annotations.dart';
 
-class MockAudioPlayer extends Mock implements AudioPlayer {}
+@GenerateMocks([AudioPlayer])
+void main() {}
