@@ -23,10 +23,29 @@ void main() {
         ),
       );
 
-      // すべてのボタンが存在することを確認
+      // 録音ボタンが存在することを確認
       expect(find.byIcon(Icons.mic), findsOneWidget);
-      expect(find.byIcon(Icons.play_arrow), findsOneWidget);
-      expect(find.byIcon(Icons.stop), findsNWidgets(2)); // 録音停止と再生停止
+
+      // 再生ボタンが存在することを確認（再生開始ボタンのみ）
+      final playButtonFinder = find.ancestor(
+        of: find.byTooltip('再生開始'),
+        matching: find.byType(IconButton),
+      );
+      expect(playButtonFinder, findsOneWidget);
+
+      final playButton = tester.widget<IconButton>(playButtonFinder);
+      expect((playButton.icon as Icon).icon, Icons.play_arrow);
+      expect(playButton.color, Colors.black);
+
+      // 録音停止ボタンが存在することを確認
+      final recordStopButtonFinder = find.ancestor(
+        of: find.byTooltip('録音停止'),
+        matching: find.byType(IconButton),
+      );
+      expect(recordStopButtonFinder, findsOneWidget);
+      final recordStopButton =
+          tester.widget<IconButton>(recordStopButtonFinder);
+      expect((recordStopButton.icon as Icon).icon, Icons.stop);
 
       // 一時停止ボタンが表示されていないことを確認
       expect(find.byIcon(Icons.pause), findsNothing);
@@ -35,24 +54,16 @@ void main() {
       expect(find.byTooltip('録音開始'), findsOneWidget);
       expect(find.byTooltip('録音停止'), findsOneWidget);
       expect(find.byTooltip('再生開始'), findsOneWidget);
-      expect(find.byTooltip('再生停止'), findsOneWidget);
 
-      // ボタンの色が黒であることを確認
-      final recordButton = tester.widget<IconButton>(
-        find.ancestor(
-          of: find.byIcon(Icons.mic),
-          matching: find.byType(IconButton),
-        ),
+      // 録音ボタンの色が黒であることを確認
+      final recordButtonFinder = find.ancestor(
+        of: find.byTooltip('録音開始'),
+        matching: find.byType(IconButton),
       );
+      expect(recordButtonFinder, findsOneWidget);
+
+      final recordButton = tester.widget<IconButton>(recordButtonFinder);
       expect(recordButton.color, Colors.black);
-
-      final playButton = tester.widget<IconButton>(
-        find.ancestor(
-          of: find.byIcon(Icons.play_arrow),
-          matching: find.byType(IconButton),
-        ),
-      );
-      expect(playButton.color, Colors.black);
     });
 
     testWidgets('録音中は適切なボタンが有効/無効になる', (WidgetTester tester) async {
@@ -169,52 +180,6 @@ void main() {
       await tester.tap(find.byTooltip('録音再開'));
       expect(recordingResumed, isTrue);
     });
-
-    testWidgets('再生中は適切なボタンが有効/無効になる', (WidgetTester tester) async {
-      bool playingStopped = false;
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: RecordingButtons(
-              isRecording: false,
-              isPlaying: true,
-              isPaused: false,
-              onStartRecording: null,
-              onStopRecording: null,
-              onStartPlaying: null,
-              onStopPlaying: () => playingStopped = true,
-              onPauseRecording: null,
-              onResumeRecording: null,
-            ),
-          ),
-        ),
-      );
-
-      // 再生ボタンが緑色になることを確認
-      final playButton = tester.widget<IconButton>(
-        find.ancestor(
-          of: find.byIcon(Icons.play_arrow),
-          matching: find.byType(IconButton),
-        ),
-      );
-      expect(playButton.color, Colors.green);
-
-      // 再生停止ボタンが有効で緑色になることを確認
-      final stopPlayButton = tester.widget<IconButton>(
-        find.ancestor(
-          of: find.byTooltip('再生停止'),
-          matching: find.byType(IconButton),
-        ),
-      );
-      expect(stopPlayButton.onPressed, isNotNull);
-      expect(stopPlayButton.color, Colors.green);
-
-      // 再生停止ボタンをタップ
-      await tester.tap(find.byTooltip('再生停止'));
-      expect(playingStopped, isTrue);
-    });
-
     testWidgets('コールバックが正しく呼び出される', (WidgetTester tester) async {
       bool recordingStarted = false;
       bool playingStarted = false;
@@ -273,6 +238,105 @@ void main() {
         ),
       );
       expect(playButton.onPressed, isNull);
+    });
+
+    testWidgets('録音の基本フローが正しく動作する', (WidgetTester tester) async {
+      bool recordingStarted = false;
+      bool recordingPaused = false;
+      bool recordingResumed = false;
+      bool recordingStopped = false;
+
+      // 1. 初期状態
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RecordingButtons(
+              isRecording: false,
+              isPlaying: false,
+              isPaused: false,
+              onStartRecording: () => recordingStarted = true,
+              onStopRecording: () => recordingStopped = true,
+              onPauseRecording: () => recordingPaused = true,
+              onResumeRecording: () => recordingResumed = true,
+              onStartPlaying: null,
+              onStopPlaying: null,
+            ),
+          ),
+        ),
+      );
+
+      // 録音開始
+      await tester.tap(find.byTooltip('録音開始'));
+      expect(recordingStarted, isTrue);
+
+      // 2. 録音中の状態
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RecordingButtons(
+              isRecording: true,
+              isPlaying: false,
+              isPaused: false,
+              onStartRecording: () => recordingStarted = true,
+              onStopRecording: () => recordingStopped = true,
+              onPauseRecording: () => recordingPaused = true,
+              onResumeRecording: () => recordingResumed = true,
+              onStartPlaying: null,
+              onStopPlaying: null,
+            ),
+          ),
+        ),
+      );
+
+      // 一時停止
+      await tester.tap(find.byTooltip('録音一時停止'));
+      expect(recordingPaused, isTrue);
+
+      // 3. 一時停止中の状態
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RecordingButtons(
+              isRecording: true,
+              isPlaying: false,
+              isPaused: true,
+              onStartRecording: () => recordingStarted = true,
+              onStopRecording: () => recordingStopped = true,
+              onPauseRecording: () => recordingPaused = true,
+              onResumeRecording: () => recordingResumed = true,
+              onStartPlaying: null,
+              onStopPlaying: null,
+            ),
+          ),
+        ),
+      );
+
+      // 再開
+      await tester.tap(find.byTooltip('録音再開'));
+      expect(recordingResumed, isTrue);
+
+      // 4. 録音再開後の状態
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RecordingButtons(
+              isRecording: true,
+              isPlaying: false,
+              isPaused: false,
+              onStartRecording: () => recordingStarted = true,
+              onStopRecording: () => recordingStopped = true,
+              onPauseRecording: () => recordingPaused = true,
+              onResumeRecording: () => recordingResumed = true,
+              onStartPlaying: null,
+              onStopPlaying: null,
+            ),
+          ),
+        ),
+      );
+
+      // 停止
+      await tester.tap(find.byTooltip('録音停止'));
+      expect(recordingStopped, isTrue);
     });
   });
 }

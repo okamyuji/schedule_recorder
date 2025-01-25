@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:schedule_recorder/models/audio_file.dart';
+import 'package:schedule_recorder/models/schedule_page/audio_file.dart';
 import 'package:schedule_recorder/widgets/schedule_page/audio_file_list.dart';
 
 void main() {

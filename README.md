@@ -1,6 +1,6 @@
 # Schedule Recorder
 
-Schedule Recorderは、Flutterをベースにした音声を録音し、予定管理に活用できるアプリケーションです。iOSに最適化された設計と機能を備えています。
+Schedule Recorderは、Flutterをベースにした音声を録音し、予定管理に活用できるアプリケーションです。**iOSだけに**最適化された設計と機能を備えています。Androidでは動作しません。
 
 ## 特徴
 
@@ -250,7 +250,7 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
 
 ```bash
 # ユニットテストに必要なMockを作成する
-dart run build_runner build
+dart run build_runner build --delete-conflicting-outputs
 
 # ユニットテストを実行する
 flutter test
@@ -346,6 +346,80 @@ flutter test
         ```bash
         flutter build ios --allow-provisioning-updates
         ```
+
+## 開発者向け実装詳細
+
+### iOS側の実装詳細
+
+1. **AVAudioSessionの管理**
+   - `setupAudioSession()`メソッドで初期設定
+   - カテゴリ: `.playAndRecord`
+   - オプション: `.defaultToSpeaker`, `.allowBluetooth`
+   - 録音中断時の自動ハンドリング
+
+2. **通話イベントの処理**
+   - `CXProviderDelegate`と`CXCallObserverDelegate`による通話状態の監視
+   - `AVAudioSession.interruptionNotification`による中断通知の監視
+   - 通話開始時の録音一時停止と終了時の再開
+
+3. **録音状態の同期**
+   - `RecordingInterrupted`イベント: 録音の一時停止
+   - `RecordingResumed`イベント: 録音の再開
+   - 状態変更時のMethodChannelを通じたFlutter側への通知
+
+### Flutter側の実装詳細
+
+1. **状態管理**
+   - `RecordingStateNotifier`による録音状態の管理
+   - 状態遷移: 停止 → 録音中 → 一時停止
+   - 各状態でのUI更新とユーザー操作の制御
+
+2. **録音処理**
+   - `record`パッケージによる録音機能の実装
+   - 録音設定:
+     - エンコーダー: `AudioEncoder.aacLc`
+     - ビットレート: 128000
+     - サンプルレート: 44100
+
+3. **イベントハンドリング**
+   - iOS側からのイベントをMethodChannelで受信
+   - 録音状態の自動更新
+   - エラー発生時のログ出力と状態リセット
+
+### 実装上の注意点
+
+1. **録音の一時停止と再開**
+   - 同一ファイルでの録音継続
+   - 状態遷移の正確な管理
+   - UIの適切な更新
+
+2. **エラーハンドリング**
+   - 録音失敗時の適切な状態リセット
+   - ユーザーへのエラー通知
+   - ログ出力による問題追跡
+
+3. **リソース管理**
+   - 録音セッションの適切な開放
+   - メモリリークの防止
+   - バックグラウンド処理の最適化
+
+### デバッグとトラブルシューティング
+
+1. **ログ出力**
+   - 状態変更時のログ
+   - エラー発生時の詳細情報
+   - 録音操作の実行順序
+
+2. **一般的な問題と解決策**
+   - 録音が再開されない: AVAudioSessionの状態を確認
+   - 音量が低い: オーディオセッションの設定を確認
+   - 状態が不整合: ログを確認し状態遷移を追跡
+
+3. **テスト項目**
+   - 手動での一時停止/再開
+   - 通話による中断/再開
+   - バックグラウンド録音
+   - エラー発生時の動作
 
 ## 今後の改善点
 

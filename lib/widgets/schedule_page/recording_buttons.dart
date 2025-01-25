@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:schedule_recorder/constants/strings.dart';
+import 'package:schedule_recorder/constants/schedule_page/strings.dart';
 
 class RecordingButtons extends StatelessWidget {
   final bool isRecording;

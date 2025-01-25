@@ -17,24 +17,21 @@ class FileSharingService {
     required Logger logger,
   }) : _logger = logger;
 
-  /// 録音ファイルとログファイルを共有する
+  /// 録音ファイルを共有する
   ///
   /// [context] - BuildContext
-  /// [logPath] - ログファイルのパス
   ///
   /// 共有に失敗した場合は[ShareFilesException]をスローする
   Future<void> shareFiles({
     required BuildContext context,
-    required String logPath,
   }) async {
     try {
       _logger.w('ファイル共有を開始します');
       final appDir = await getApplicationDocumentsDirectory();
       final recordingPath = path.join(appDir.path, 'recording.m4a');
-      final logFile = File(logPath);
       final recordingFile = File(recordingPath);
 
-      if (!recordingFile.existsSync() && !logFile.existsSync()) {
+      if (!recordingFile.existsSync()) {
         _logger.e('共有可能なファイルが見つかりません');
         throw const ShareFilesException('共有できるファイルがありません');
       }
@@ -47,15 +44,9 @@ class FileSharingService {
         files.add(XFile(recordingPath, mimeType: 'audio/mp4'));
       }
 
-      // ログファイルの追加
-      if (logFile.existsSync()) {
-        _logger.w('ログファイルを共有リストに追加: $logPath');
-        files.add(XFile(logPath, mimeType: 'text/plain'));
-      }
-
       await Share.shareXFiles(
         files,
-        subject: '録音データとログ',
+        subject: '録音データ',
       );
       _logger.w('ファイル共有が完了しました');
     } catch (e) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:schedule_recorder/models/audio_file.dart';
+import 'package:schedule_recorder/models/schedule_page/audio_file.dart';
 
 class AudioFileList extends StatelessWidget {
   final List<AudioFile> files;
