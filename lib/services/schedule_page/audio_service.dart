@@ -1,41 +1,57 @@
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:riverpod/riverpod.dart';
+import '../../providers/recording_state_provider.dart';
 
+part 'audio_service.g.dart';
+
+/// オーディオサービス
+@riverpod
+AudioService audioService(Ref ref) {
+  return AudioService(
+    player: AudioPlayer(),
+    logger: Logger(),
+    recordingStateNotifier: ref.watch(recordingStateNotifierProvider.notifier),
+  );
+}
+
+/// オーディオサービス
 class AudioService {
   static const MethodChannel _channel =
       MethodChannel('com.example.schedule_recorder/audio');
 
-  static final Logger _staticLogger = Logger();
   final Logger _logger;
   final AudioPlayer _player;
+  final RecordingStateNotifier _recordingStateNotifier;
 
+  /// オーディオサービスのコンストラクタ
   AudioService({
     required AudioPlayer player,
     required Logger logger,
+    required RecordingStateNotifier recordingStateNotifier,
   })  : _player = player,
-        _logger = logger;
+        _logger = logger,
+        _recordingStateNotifier = recordingStateNotifier;
 
   /// ネイティブリスナーの設定
   ///
   /// [onInterrupted] - 録音中断時のコールバック
   /// [onResumed] - 録音再開時のコールバック
-  static void setupNativeListeners({
-    required VoidCallback onInterrupted,
-    required VoidCallback onResumed,
-  }) {
+  void setupNativeListeners() {
     _channel.setMethodCallHandler((call) async {
       switch (call.method) {
         case 'RecordingInterrupted':
-          _staticLogger.w('Received RecordingInterrupted event');
-          onInterrupted();
+          _logger.w('Received RecordingInterrupted event');
+          _recordingStateNotifier.pauseRecording();
           return;
         case 'RecordingResumed':
-          _staticLogger.i('Received RecordingResumed event');
-          onResumed();
+          _logger.i('Received RecordingResumed event');
+          _recordingStateNotifier.resumeRecording();
           return;
         default:
-          _staticLogger.e('Unknown method: ${call.method}');
+          _logger.e('Unknown method: ${call.method}');
           throw PlatformException(
             code: 'UNSUPPORTED_METHOD',
             message: 'Unknown method: ${call.method}',
@@ -44,6 +60,9 @@ class AudioService {
     });
   }
 
+  /// 再生を開始する
+  ///
+  /// [path] - 再生するファイルのパス
   Future<void> startPlaying(String path) async {
     try {
       _logger.i('Starting playback...');

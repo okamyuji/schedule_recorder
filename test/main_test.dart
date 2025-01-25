@@ -11,6 +11,9 @@ import 'package:record/record.dart';
 import 'package:schedule_recorder/screens/schedule_page/schedule_page.dart';
 import 'package:schedule_recorder/services/schedule_page/file_management_service.dart';
 import 'package:schedule_recorder/widgets/schedule_page/recording_buttons.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:schedule_recorder/providers/recording_state_provider.dart';
+import 'mocks/recording_state_notifier_mock.dart';
 
 import 'main_test.mocks.dart';
 
@@ -35,10 +38,12 @@ class MockPermissionHandlerPlatform extends Mock
 void main() {
   late MockAudioRecorder mockRecorder;
   late MockAudioPlayer mockPlayer;
+  late MockRecordingStateNotifier mockRecordingStateNotifier;
 
   setUp(() {
     mockRecorder = MockAudioRecorder();
     mockPlayer = MockAudioPlayer();
+    mockRecordingStateNotifier = MockRecordingStateNotifier();
 
     // パーミッションのモックを設定
     final mockPermissionHandler = MockPermissionHandlerPlatform();
@@ -90,6 +95,7 @@ void main() {
           ),
           documentsPath: '/test/path',
           logger: Logger(),
+          recordingStateNotifier: mockRecordingStateNotifier,
         ),
       ),
     );
@@ -114,23 +120,33 @@ void main() {
 
   group('ScheduleRecorderApp', () {
     testWidgets('アプリが正しく初期化される', (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(
-        title: 'Schedule Recorder',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          useMaterial3: true,
-        ),
-        home: SchedulePage(
-          recorder: mockRecorder,
-          player: mockPlayer,
-          fileManagementService: FileManagementService(
-            logger: Logger(),
-            documentsPath: '/test/path',
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            recordingStateNotifierProvider.overrideWith(
+              () => mockRecordingStateNotifier,
+            ),
+          ],
+          child: MaterialApp(
+            title: 'Schedule Recorder',
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+              useMaterial3: true,
+            ),
+            home: SchedulePage(
+              recorder: mockRecorder,
+              player: mockPlayer,
+              fileManagementService: FileManagementService(
+                logger: Logger(),
+                documentsPath: '/test/path',
+              ),
+              documentsPath: '/test/path',
+              logger: Logger(),
+              recordingStateNotifier: mockRecordingStateNotifier,
+            ),
           ),
-          documentsPath: '/test/path',
-          logger: Logger(),
         ),
-      ));
+      );
 
       // MaterialAppが存在することを確認
       expect(find.byType(MaterialApp), findsOneWidget);
@@ -166,6 +182,7 @@ void main() {
           ),
           documentsPath: '/test/path',
           logger: Logger(),
+          recordingStateNotifier: mockRecordingStateNotifier,
         ),
       ));
 
@@ -181,5 +198,31 @@ void main() {
       expect(page.recorder, mockRecorder);
       expect(page.player, mockPlayer);
     });
+  });
+
+  testWidgets('App should build without errors', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          recordingStateNotifierProvider.overrideWith(
+            () => mockRecordingStateNotifier,
+          ),
+        ],
+        child: MaterialApp(
+          home: SchedulePage(
+            recorder: mockRecorder,
+            player: mockPlayer,
+            fileManagementService: FileManagementService(
+              logger: Logger(),
+              documentsPath: '/test/path',
+            ),
+            documentsPath: '/test/path',
+            logger: Logger(),
+            recordingStateNotifier: mockRecordingStateNotifier,
+          ),
+        ),
+      ),
+    );
+    expect(find.byType(MaterialApp), findsOneWidget);
   });
 }

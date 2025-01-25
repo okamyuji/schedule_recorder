@@ -28,7 +28,7 @@ import 'package:mockito/mockito.dart' as _i1;
 
 class _FakeWidget_0 extends _i1.SmartFake implements _i2.Widget {
   _FakeWidget_0(Object parent, Invocation parentInvocation)
-      : super(parent, parentInvocation);
+    : super(parent, parentInvocation);
 
   @override
   String toString({_i3.DiagnosticLevel? minLevel = _i3.DiagnosticLevel.info}) =>
@@ -38,7 +38,7 @@ class _FakeWidget_0 extends _i1.SmartFake implements _i2.Widget {
 class _FakeInheritedWidget_1 extends _i1.SmartFake
     implements _i2.InheritedWidget {
   _FakeInheritedWidget_1(Object parent, Invocation parentInvocation)
-      : super(parent, parentInvocation);
+    : super(parent, parentInvocation);
 
   @override
   String toString({_i3.DiagnosticLevel? minLevel = _i3.DiagnosticLevel.info}) =>
@@ -48,14 +48,13 @@ class _FakeInheritedWidget_1 extends _i1.SmartFake
 class _FakeDiagnosticsNode_2 extends _i1.SmartFake
     implements _i3.DiagnosticsNode {
   _FakeDiagnosticsNode_2(Object parent, Invocation parentInvocation)
-      : super(parent, parentInvocation);
+    : super(parent, parentInvocation);
 
   @override
   String toString({
     _i3.TextTreeConfiguration? parentConfiguration,
     _i3.DiagnosticLevel? minLevel = _i3.DiagnosticLevel.info,
-  }) =>
-      super.toString();
+  }) => super.toString();
 }
 
 /// A class which mocks [Logger].
@@ -67,10 +66,12 @@ class MockLogger extends _i1.Mock implements _i4.Logger {
   }
 
   @override
-  _i5.Future<void> get init => (super.noSuchMethod(
-        Invocation.getter(#init),
-        returnValue: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+  _i5.Future<void> get init =>
+      (super.noSuchMethod(
+            Invocation.getter(#init),
+            returnValue: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
 
   @override
   void v(
@@ -78,15 +79,14 @@ class MockLogger extends _i1.Mock implements _i4.Logger {
     DateTime? time,
     Object? error,
     StackTrace? stackTrace,
-  }) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #v,
-          [message],
-          {#time: time, #error: error, #stackTrace: stackTrace},
-        ),
-        returnValueForMissingStub: null,
-      );
+  }) => super.noSuchMethod(
+    Invocation.method(
+      #v,
+      [message],
+      {#time: time, #error: error, #stackTrace: stackTrace},
+    ),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void t(
@@ -94,15 +94,14 @@ class MockLogger extends _i1.Mock implements _i4.Logger {
     DateTime? time,
     Object? error,
     StackTrace? stackTrace,
-  }) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #t,
-          [message],
-          {#time: time, #error: error, #stackTrace: stackTrace},
-        ),
-        returnValueForMissingStub: null,
-      );
+  }) => super.noSuchMethod(
+    Invocation.method(
+      #t,
+      [message],
+      {#time: time, #error: error, #stackTrace: stackTrace},
+    ),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void d(
@@ -110,15 +109,14 @@ class MockLogger extends _i1.Mock implements _i4.Logger {
     DateTime? time,
     Object? error,
     StackTrace? stackTrace,
-  }) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #d,
-          [message],
-          {#time: time, #error: error, #stackTrace: stackTrace},
-        ),
-        returnValueForMissingStub: null,
-      );
+  }) => super.noSuchMethod(
+    Invocation.method(
+      #d,
+      [message],
+      {#time: time, #error: error, #stackTrace: stackTrace},
+    ),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void i(
@@ -126,15 +124,14 @@ class MockLogger extends _i1.Mock implements _i4.Logger {
     DateTime? time,
     Object? error,
     StackTrace? stackTrace,
-  }) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #i,
-          [message],
-          {#time: time, #error: error, #stackTrace: stackTrace},
-        ),
-        returnValueForMissingStub: null,
-      );
+  }) => super.noSuchMethod(
+    Invocation.method(
+      #i,
+      [message],
+      {#time: time, #error: error, #stackTrace: stackTrace},
+    ),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void w(
@@ -142,15 +139,14 @@ class MockLogger extends _i1.Mock implements _i4.Logger {
     DateTime? time,
     Object? error,
     StackTrace? stackTrace,
-  }) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #w,
-          [message],
-          {#time: time, #error: error, #stackTrace: stackTrace},
-        ),
-        returnValueForMissingStub: null,
-      );
+  }) => super.noSuchMethod(
+    Invocation.method(
+      #w,
+      [message],
+      {#time: time, #error: error, #stackTrace: stackTrace},
+    ),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void e(
@@ -158,15 +154,14 @@ class MockLogger extends _i1.Mock implements _i4.Logger {
     DateTime? time,
     Object? error,
     StackTrace? stackTrace,
-  }) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #e,
-          [message],
-          {#time: time, #error: error, #stackTrace: stackTrace},
-        ),
-        returnValueForMissingStub: null,
-      );
+  }) => super.noSuchMethod(
+    Invocation.method(
+      #e,
+      [message],
+      {#time: time, #error: error, #stackTrace: stackTrace},
+    ),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void wtf(
@@ -174,15 +169,14 @@ class MockLogger extends _i1.Mock implements _i4.Logger {
     DateTime? time,
     Object? error,
     StackTrace? stackTrace,
-  }) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #wtf,
-          [message],
-          {#time: time, #error: error, #stackTrace: stackTrace},
-        ),
-        returnValueForMissingStub: null,
-      );
+  }) => super.noSuchMethod(
+    Invocation.method(
+      #wtf,
+      [message],
+      {#time: time, #error: error, #stackTrace: stackTrace},
+    ),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void f(
@@ -190,15 +184,14 @@ class MockLogger extends _i1.Mock implements _i4.Logger {
     DateTime? time,
     Object? error,
     StackTrace? stackTrace,
-  }) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #f,
-          [message],
-          {#time: time, #error: error, #stackTrace: stackTrace},
-        ),
-        returnValueForMissingStub: null,
-      );
+  }) => super.noSuchMethod(
+    Invocation.method(
+      #f,
+      [message],
+      {#time: time, #error: error, #stackTrace: stackTrace},
+    ),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void log(
@@ -207,15 +200,14 @@ class MockLogger extends _i1.Mock implements _i4.Logger {
     DateTime? time,
     Object? error,
     StackTrace? stackTrace,
-  }) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #log,
-          [level, message],
-          {#time: time, #error: error, #stackTrace: stackTrace},
-        ),
-        returnValueForMissingStub: null,
-      );
+  }) => super.noSuchMethod(
+    Invocation.method(
+      #log,
+      [level, message],
+      {#time: time, #error: error, #stackTrace: stackTrace},
+    ),
+    returnValueForMissingStub: null,
+  );
 
   @override
   bool isClosed() =>
@@ -223,11 +215,13 @@ class MockLogger extends _i1.Mock implements _i4.Logger {
           as bool);
 
   @override
-  _i5.Future<void> close() => (super.noSuchMethod(
-        Invocation.method(#close, []),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+  _i5.Future<void> close() =>
+      (super.noSuchMethod(
+            Invocation.method(#close, []),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
 }
 
 /// A class which mocks [BuildContext].
@@ -239,10 +233,12 @@ class MockBuildContext extends _i1.Mock implements _i2.BuildContext {
   }
 
   @override
-  _i2.Widget get widget => (super.noSuchMethod(
-        Invocation.getter(#widget),
-        returnValue: _FakeWidget_0(this, Invocation.getter(#widget)),
-      ) as _i2.Widget);
+  _i2.Widget get widget =>
+      (super.noSuchMethod(
+            Invocation.getter(#widget),
+            returnValue: _FakeWidget_0(this, Invocation.getter(#widget)),
+          )
+          as _i2.Widget);
 
   @override
   bool get mounted =>
@@ -250,10 +246,12 @@ class MockBuildContext extends _i1.Mock implements _i2.BuildContext {
           as bool);
 
   @override
-  bool get debugDoingBuild => (super.noSuchMethod(
-        Invocation.getter(#debugDoingBuild),
-        returnValue: false,
-      ) as bool);
+  bool get debugDoingBuild =>
+      (super.noSuchMethod(
+            Invocation.getter(#debugDoingBuild),
+            returnValue: false,
+          )
+          as bool);
 
   @override
   _i2.InheritedWidget dependOnInheritedElement(
@@ -261,20 +259,21 @@ class MockBuildContext extends _i1.Mock implements _i2.BuildContext {
     Object? aspect,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #dependOnInheritedElement,
-          [ancestor],
-          {#aspect: aspect},
-        ),
-        returnValue: _FakeInheritedWidget_1(
-          this,
-          Invocation.method(
-            #dependOnInheritedElement,
-            [ancestor],
-            {#aspect: aspect},
-          ),
-        ),
-      ) as _i2.InheritedWidget);
+            Invocation.method(
+              #dependOnInheritedElement,
+              [ancestor],
+              {#aspect: aspect},
+            ),
+            returnValue: _FakeInheritedWidget_1(
+              this,
+              Invocation.method(
+                #dependOnInheritedElement,
+                [ancestor],
+                {#aspect: aspect},
+              ),
+            ),
+          )
+          as _i2.InheritedWidget);
 
   @override
   void visitAncestorElements(_i2.ConditionalElementVisitor? visitor) =>
@@ -285,9 +284,9 @@ class MockBuildContext extends _i1.Mock implements _i2.BuildContext {
 
   @override
   void visitChildElements(_i2.ElementVisitor? visitor) => super.noSuchMethod(
-        Invocation.method(#visitChildElements, [visitor]),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#visitChildElements, [visitor]),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void dispatchNotification(_i7.Notification? notification) =>
@@ -302,12 +301,13 @@ class MockBuildContext extends _i1.Mock implements _i2.BuildContext {
     _i3.DiagnosticsTreeStyle? style = _i3.DiagnosticsTreeStyle.errorProperty,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(#describeElement, [name], {#style: style}),
-        returnValue: _FakeDiagnosticsNode_2(
-          this,
-          Invocation.method(#describeElement, [name], {#style: style}),
-        ),
-      ) as _i3.DiagnosticsNode);
+            Invocation.method(#describeElement, [name], {#style: style}),
+            returnValue: _FakeDiagnosticsNode_2(
+              this,
+              Invocation.method(#describeElement, [name], {#style: style}),
+            ),
+          )
+          as _i3.DiagnosticsNode);
 
   @override
   _i3.DiagnosticsNode describeWidget(
@@ -315,31 +315,34 @@ class MockBuildContext extends _i1.Mock implements _i2.BuildContext {
     _i3.DiagnosticsTreeStyle? style = _i3.DiagnosticsTreeStyle.errorProperty,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(#describeWidget, [name], {#style: style}),
-        returnValue: _FakeDiagnosticsNode_2(
-          this,
-          Invocation.method(#describeWidget, [name], {#style: style}),
-        ),
-      ) as _i3.DiagnosticsNode);
+            Invocation.method(#describeWidget, [name], {#style: style}),
+            returnValue: _FakeDiagnosticsNode_2(
+              this,
+              Invocation.method(#describeWidget, [name], {#style: style}),
+            ),
+          )
+          as _i3.DiagnosticsNode);
 
   @override
   List<_i3.DiagnosticsNode> describeMissingAncestor({
     required Type? expectedAncestorType,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(#describeMissingAncestor, [], {
-          #expectedAncestorType: expectedAncestorType,
-        }),
-        returnValue: <_i3.DiagnosticsNode>[],
-      ) as List<_i3.DiagnosticsNode>);
+            Invocation.method(#describeMissingAncestor, [], {
+              #expectedAncestorType: expectedAncestorType,
+            }),
+            returnValue: <_i3.DiagnosticsNode>[],
+          )
+          as List<_i3.DiagnosticsNode>);
 
   @override
   _i3.DiagnosticsNode describeOwnershipChain(String? name) =>
       (super.noSuchMethod(
-        Invocation.method(#describeOwnershipChain, [name]),
-        returnValue: _FakeDiagnosticsNode_2(
-          this,
-          Invocation.method(#describeOwnershipChain, [name]),
-        ),
-      ) as _i3.DiagnosticsNode);
+            Invocation.method(#describeOwnershipChain, [name]),
+            returnValue: _FakeDiagnosticsNode_2(
+              this,
+              Invocation.method(#describeOwnershipChain, [name]),
+            ),
+          )
+          as _i3.DiagnosticsNode);
 }

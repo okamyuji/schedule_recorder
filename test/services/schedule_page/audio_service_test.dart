@@ -1,11 +1,21 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logger/logger.dart';
+import 'package:mockito/mockito.dart';
 import 'package:schedule_recorder/services/schedule_page/audio_service.dart';
+import '../../mocks/recording_state_notifier_mock.dart';
+import '../../mocks/audio_player_mock.dart';
 
 void main() {
   const MethodChannel channel =
       MethodChannel('com.example.schedule_recorder/audio');
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  late MockRecordingStateNotifier mockRecordingStateNotifier;
+
+  setUp(() {
+    mockRecordingStateNotifier = MockRecordingStateNotifier();
+  });
 
   group('AudioService', () {
     late List<String> methodCalls;
@@ -24,22 +34,16 @@ void main() {
           .setMockMethodCallHandler(channel, null);
     });
 
-    test('setupNativeListenersでRecordingInterruptedが受信されたらonInterruptedが呼ばれる',
+    test('setupNativeListenersでRecordingInterruptedが受信されたらpauseRecordingが呼ばれる',
         () async {
-      // Arrange
-      bool onInterruptedCalled = false;
-      bool onResumedCalled = false;
-
-      AudioService.setupNativeListeners(
-        onInterrupted: () {
-          onInterruptedCalled = true;
-        },
-        onResumed: () {
-          onResumedCalled = true;
-        },
+      final audioService = AudioService(
+        player: MockAudioPlayer(),
+        logger: Logger(),
+        recordingStateNotifier: mockRecordingStateNotifier,
       );
 
-      // Act
+      audioService.setupNativeListeners();
+
       await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .handlePlatformMessage(
         channel.name,
@@ -49,27 +53,19 @@ void main() {
         (ByteData? data) {},
       );
 
-      // Assert
-      expect(onInterruptedCalled, isTrue);
-      expect(onResumedCalled, isFalse);
+      verify(mockRecordingStateNotifier.pauseRecording()).called(1);
     });
 
-    test('setupNativeListenersでRecordingResumedが受信されたらonResumedが呼ばれる',
+    test('setupNativeListenersでRecordingResumedが受信されたらresumeRecordingが呼ばれる',
         () async {
-      // Arrange
-      bool onInterruptedCalled = false;
-      bool onResumedCalled = false;
-
-      AudioService.setupNativeListeners(
-        onInterrupted: () {
-          onInterruptedCalled = true;
-        },
-        onResumed: () {
-          onResumedCalled = true;
-        },
+      final audioService = AudioService(
+        player: MockAudioPlayer(),
+        logger: Logger(),
+        recordingStateNotifier: mockRecordingStateNotifier,
       );
 
-      // Act
+      audioService.setupNativeListeners();
+
       await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .handlePlatformMessage(
         channel.name,
@@ -79,35 +75,33 @@ void main() {
         (ByteData? data) {},
       );
 
-      // Assert
-      expect(onInterruptedCalled, isFalse);
-      expect(onResumedCalled, isTrue);
+      verify(mockRecordingStateNotifier.resumeRecording()).called(1);
     });
 
     test('setupNativeListenersでUnknownMethodが受信されたらUnsupportedErrorがスローされる',
         () async {
-      // Arrange
-      AudioService.setupNativeListeners(
-        onInterrupted: () {},
-        onResumed: () {},
+      final audioService = AudioService(
+        player: MockAudioPlayer(),
+        logger: Logger(),
+        recordingStateNotifier: mockRecordingStateNotifier,
       );
 
-      // Act & Assert
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-        if (methodCall.method == 'UnknownMethod') {
-          throw PlatformException(
-            code: 'UNSUPPORTED_METHOD',
-            message: 'Unknown method: ${methodCall.method}',
-          );
-        }
-        return null;
-      });
+      audioService.setupNativeListeners();
 
-      expect(
-        () async {
-          await channel.invokeMethod('UnknownMethod');
-        },
+      await expectLater(
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .handlePlatformMessage(
+          channel.name,
+          const StandardMethodCodec().encodeMethodCall(
+            const MethodCall('UnknownMethod'),
+          ),
+          (ByteData? data) {
+            final exception = const StandardMethodCodec().decodeEnvelope(data!)
+                as PlatformException;
+            expect(exception.code, 'UNSUPPORTED_METHOD');
+            expect(exception.message, 'Unknown method: UnknownMethod');
+          },
+        ),
         throwsA(isA<PlatformException>()),
       );
     });

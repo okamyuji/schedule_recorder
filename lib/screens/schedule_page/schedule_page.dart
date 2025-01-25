@@ -12,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:schedule_recorder/constants/strings.dart';
 import 'package:schedule_recorder/models/audio_file.dart';
+import 'package:schedule_recorder/providers/recording_state_provider.dart';
 import 'package:schedule_recorder/services/schedule_page/audio_service.dart';
 import 'package:schedule_recorder/services/schedule_page/file_management_service.dart';
 import 'package:schedule_recorder/services/schedule_page/file_receiver_service.dart';
@@ -80,6 +81,7 @@ class SchedulePage extends StatefulWidget {
   final FileManagementService fileManagementService;
   final String documentsPath;
   final Logger logger;
+  final RecordingStateNotifier recordingStateNotifier;
 
   const SchedulePage({
     super.key,
@@ -89,6 +91,7 @@ class SchedulePage extends StatefulWidget {
     required this.fileManagementService,
     required this.documentsPath,
     required this.logger,
+    required this.recordingStateNotifier,
   });
 
   @override
@@ -122,6 +125,7 @@ class _SchedulePageState extends State<SchedulePage> {
     _audioService = AudioService(
       player: widget.player,
       logger: widget.logger,
+      recordingStateNotifier: widget.recordingStateNotifier,
     );
 
     _initializeLogger();
@@ -135,21 +139,7 @@ class _SchedulePageState extends State<SchedulePage> {
         _loadAudioFiles();
       }
       // AudioServiceのリスナーを設定（初期化時に行う）
-      AudioService.setupNativeListeners(
-        onInterrupted: () {
-          widget.logger.i('Audio interruption detected');
-          if (isRecording && !isPaused) {
-            _handleRecordingInterrupted();
-          }
-        },
-        onResumed: () {
-          widget.logger.i('Audio resumption detected');
-          if (isRecording && isPaused) {
-            // 条件を修正
-            _handleRecordingResumed();
-          }
-        },
-      );
+      _audioService.setupNativeListeners();
     }).catchError((e) {
       widget.logger.e('Recorder initialization error: $e');
     });
@@ -302,20 +292,7 @@ class _SchedulePageState extends State<SchedulePage> {
         widget.logger.i('Starting recording...');
 
         // AudioServiceのリスナーを設定
-        AudioService.setupNativeListeners(
-          onInterrupted: () {
-            widget.logger.i('Audio interruption detected');
-            if (isRecording && !isPaused) {
-              _handleRecordingInterrupted();
-            }
-          },
-          onResumed: () {
-            widget.logger.i('Audio resumption detected');
-            if (isPaused) {
-              _handleRecordingResumed();
-            }
-          },
-        );
+        _audioService.setupNativeListeners();
 
         // 録音開始前に状態をリセット
         if (mounted) {

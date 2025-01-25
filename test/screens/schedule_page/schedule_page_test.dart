@@ -10,6 +10,9 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:record/record.dart';
 import 'package:schedule_recorder/screens/schedule_page/schedule_page.dart';
 import 'package:schedule_recorder/services/schedule_page/file_management_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:schedule_recorder/providers/recording_state_provider.dart';
+import '../../mocks/recording_state_notifier_mock.dart';
 
 import 'schedule_page_test.mocks.dart';
 
@@ -36,10 +39,12 @@ void main() {
 
   late MockAudioRecorder mockRecorder;
   late MockAudioPlayer mockPlayer;
+  late MockRecordingStateNotifier mockRecordingStateNotifier;
 
   setUp(() {
     mockRecorder = MockAudioRecorder();
     mockPlayer = MockAudioPlayer();
+    mockRecordingStateNotifier = MockRecordingStateNotifier();
 
     // パーミッションのモックを設定
     final mockPermissionHandler = MockPermissionHandlerPlatform();
@@ -83,16 +88,24 @@ void main() {
 
   Future<void> pumpSchedulePage(WidgetTester tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: SchedulePage(
-          recorder: mockRecorder,
-          player: mockPlayer,
-          fileManagementService: FileManagementService(
-            logger: Logger(),
-            documentsPath: '/test/path',
+      ProviderScope(
+        overrides: [
+          recordingStateNotifierProvider.overrideWith(
+            () => mockRecordingStateNotifier,
           ),
-          documentsPath: '/test/path',
-          logger: Logger(),
+        ],
+        child: MaterialApp(
+          home: SchedulePage(
+            recorder: mockRecorder,
+            player: mockPlayer,
+            fileManagementService: FileManagementService(
+              logger: Logger(),
+              documentsPath: '/test/path',
+            ),
+            documentsPath: '/test/path',
+            logger: Logger(),
+            recordingStateNotifier: mockRecordingStateNotifier,
+          ),
         ),
       ),
     );
@@ -130,6 +143,7 @@ void main() {
           ),
           documentsPath: '/test/path',
           logger: Logger(),
+          recordingStateNotifier: mockRecordingStateNotifier,
         ),
       ),
     );
@@ -186,5 +200,32 @@ void main() {
     expect(find.byKey(const Key('pause_button')), findsNothing);
     expect(find.byKey(const Key('resume_button')), findsNothing);
     verify(mockRecorder.stop()).called(1);
+  });
+
+  testWidgets('SchedulePage should build without errors',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          recordingStateNotifierProvider.overrideWith(
+            () => mockRecordingStateNotifier,
+          ),
+        ],
+        child: MaterialApp(
+          home: SchedulePage(
+            recorder: mockRecorder,
+            player: mockPlayer,
+            fileManagementService: FileManagementService(
+              logger: Logger(),
+              documentsPath: '/test/path',
+            ),
+            documentsPath: '/test/path',
+            logger: Logger(),
+            recordingStateNotifier: mockRecordingStateNotifier,
+          ),
+        ),
+      ),
+    );
+    expect(find.byType(SchedulePage), findsOneWidget);
   });
 }
