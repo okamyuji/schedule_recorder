@@ -1,10 +1,15 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:flutter_test/flutter_test.dart';
+
+// Project imports:
 import 'package:schedule_recorder/models/schedule_page/audio_file.dart';
 import 'package:schedule_recorder/widgets/schedule_page/audio_file_list.dart';
 
 void main() {
-  group('AudioFileList', () {
+  group('AudioFileList Tests', () {
     late List<AudioFile> testFiles;
     late Function(AudioFile) onPlayTap;
     late Function(AudioFile) onDeleteTap;

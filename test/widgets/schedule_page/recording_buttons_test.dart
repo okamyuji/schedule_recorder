@@ -1,9 +1,14 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:flutter_test/flutter_test.dart';
+
+// Project imports:
 import 'package:schedule_recorder/widgets/schedule_page/recording_buttons.dart';
 
 void main() {
-  group('RecordingButtons', () {
+  group('RecordingButtons Tests', () {
     testWidgets('初期状態で正しく表示される', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
