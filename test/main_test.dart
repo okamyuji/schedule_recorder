@@ -1,4 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
@@ -8,9 +11,10 @@ import 'package:mockito/mockito.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:record/record.dart';
+
+// Project imports:
 import 'package:schedule_recorder/main.dart';
 import 'package:schedule_recorder/services/schedule_page/file_management_service.dart';
-
 import 'main_test.mocks.dart';
 
 class MockPathProviderPlatform extends Mock
@@ -40,7 +44,7 @@ void main() {
     });
   });
 
-  group('ScheduleRecorderApp', () {
+  group('ScheduleRecorderApp Tests', () {
     late MockLogger mockLogger;
     late String documentsPath;
 
