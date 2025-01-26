@@ -1,3 +1,4 @@
+// Package imports:
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'recording_state_provider.g.dart';
@@ -11,7 +12,7 @@ enum RecordingState {
 
 /// 録音状態のプロバイダ
 @riverpod
-class RecordingStateNotifier extends AutoDisposeNotifier<RecordingState> {
+class RecordingStateNotifier extends _$RecordingStateNotifier {
   @override
   RecordingState build() => RecordingState.stopped;
 

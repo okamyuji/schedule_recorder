@@ -7,7 +7,7 @@ part of 'recording_state_provider.dart';
 // **************************************************************************
 
 String _$recordingStateNotifierHash() =>
-    r'cac4e324fdecc99b7eb17f74ec577c343d9c9c32';
+    r'ecd559d9cf2cc5725b44023770bcc7fb5f87ef8f';
 
 /// 録音状態のプロバイダ
 ///
