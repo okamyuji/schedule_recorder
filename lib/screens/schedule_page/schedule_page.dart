@@ -1,15 +1,21 @@
+// Dart imports:
 import 'dart:async';
 import 'dart:io';
 
-import 'package:device_info_plus/device_info_plus.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
+
+// Project imports:
 import 'package:schedule_recorder/constants/schedule_page/strings.dart';
 import 'package:schedule_recorder/models/schedule_page/audio_file.dart';
 import 'package:schedule_recorder/providers/schedule_page/recording_state_provider.dart';
@@ -18,58 +24,6 @@ import 'package:schedule_recorder/services/schedule_page/file_management_service
 import 'package:schedule_recorder/services/schedule_page/file_sharing_service.dart';
 import 'package:schedule_recorder/widgets/schedule_page/audio_file_list.dart';
 import 'package:schedule_recorder/widgets/schedule_page/recording_buttons.dart';
-import 'package:synchronized/synchronized.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-/// ロガー
-final logger = Logger(
-  filter: DevelopmentFilter(),
-  output: MultiOutput([
-    ConsoleOutput(),
-    CustomFileOutput(),
-  ]),
-  printer: PrettyPrinter(
-      methodCount: 2,
-      errorMethodCount: 8,
-      lineLength: 120,
-      colors: false,
-      printEmojis: false,
-      dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart),
-  level: Level.debug,
-);
-
-/// ログファイルの出力
-class CustomFileOutput extends LogOutput {
-  static String? _logPath;
-  static final _lock = Lock();
-
-  static void setLogPath(String path) {
-    _logPath = path;
-    final file = File(_logPath!);
-    if (!file.existsSync()) {
-      file.createSync(recursive: true);
-    }
-  }
-
-  @override
-  void output(OutputEvent event) {
-    if (_logPath == null) return;
-
-    _lock.synchronized(() {
-      try {
-        final file = File(_logPath!);
-        final timestamp = DateTime.now().toIso8601String();
-        final level = event.level.toString().split('.').last.toUpperCase();
-        final message = event.lines.join('\n');
-        final logEntry = '$timestamp [$level] $message\n';
-
-        file.writeAsStringSync(logEntry, mode: FileMode.append, flush: true);
-      } catch (e) {
-        debugPrint('ログファイルへの書き込みに失敗しました: $e');
-      }
-    });
-  }
-}
 
 /// スケジュールページ
 class SchedulePage extends ConsumerStatefulWidget {
@@ -104,7 +58,6 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
   bool isPaused = false;
   String? _recordingPath;
   bool _isInitialized = false;
-  late final String _logPath;
   late final FileSharingService _fileSharingService;
   late final FileManagementService _fileManagementService;
   late final AudioService _audioService;
@@ -145,14 +98,9 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
   /// ログファイルの初期化
   Future<void> _initializeLogger() async {
     try {
-      final appDir = await getApplicationDocumentsDirectory();
-      _logPath = path.join(appDir.path, 'app.log');
-      CustomFileOutput.setLogPath(_logPath);
-
       widget.logger
         ..i('=== アプリケーションログ開始 ===')
         ..i('アプリケーションを起動しました')
-        ..i('ログファイルパス: $_logPath')
         ..i('アプリバージョン: ${await _getAppVersion()}')
         ..i('デバイス情報: ${await _getDeviceInfo()}');
     } catch (e) {
