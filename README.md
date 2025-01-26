@@ -1,20 +1,29 @@
 # Schedule Recorder
 
-Schedule Recorderは、Flutterをベースにした音声を録音し、予定管理に活用できるアプリケーションです。**iOSだけに**最適化された設計と機能を備えています。Androidでは動作しません。
+Schedule Recorderは、Flutterをベースにした音声を録音し、予定管理に活用できるアプリケーションです。**iOSだけに**最適化された設計と機能を備えています。Androidでは正しく動作しません。
 
 ## 特徴
 
 ### iOS向けの機能と設計
 
-- Native Audio APIの統合
-    - iOSのCore Audioを活用した録音機能を提供。高品質な音声データの録音と再生を可能にします。
+- iOSのAVFoundationによる高度な音声処理
+    - スピーカー出力とBluetooth機器のサポート
+    - カスタマイズされた音声セッション管理
+- iOSのCallKitとの完全な統合
+    - iOSのシステムイベント（着信）にも対応し、録音を中断・再開する機能を提供
+    - 着信・発信時の自動録音制御
+    - 通話状態のリアルタイム監視
+    - 通話終了後の録音自動再開
+- FlutterとNative（Swift）間の最適化された通信
+    - 双方向のMethodChannel実装
+    - 詳細なデバッグログシステム
+    - 状態管理の完全な同期
 - iOSのバックグラウンドタスク対応
-    - 録音中でもバックグラウンドで動作可能な設計を採用しています。
-- 録音の中断・再開
-    - iOSのシステムイベント（例: 着信）にも対応し、録音を中断・再開する機能を提供しています。
+    - 録音中でもバックグラウンドで動作可能な設計を採用
 - ファイル共有機能
     - ファイル共有に対応
-    - 他のアプリとの音声ファイルの共有が可能
+    - 他のアプリへの音声ファイルの共有が可能
+    - **他のアプリからの共有ファイル受信には現状未対応**
 
 ### 全般的な機能
 
@@ -36,6 +45,7 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
 ### Info.plist の設定
 
 1. マイク使用権限
+   - アプリがマイクを使用する際のユーザー許可を取得可能にする
 
     ```xml
     <key>NSMicrophoneUsageDescription</key>
@@ -43,6 +53,8 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
     ```
 
 2. バックグラウンド実行の設定
+   - アプリがバックグラウンドでも録音を継続可能にする
+   - オーディオ処理をバックグラウンドで実行可能にする
 
     ```xml
     <key>UIBackgroundModes</key>
@@ -53,6 +65,7 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
     ```
 
 3. ファイル共有の設定
+   - ファイル共有が可能な他のアプリに対して音声ファイルを共有可能にする
 
     ```xml
     <key>LSSupportsOpeningDocumentsInPlace</key>
@@ -62,6 +75,7 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
     ```
 
 4. ファイルタイプの設定
+   - このアプリの共有メニューから音声ファイル（.m4a, .mp3）を共有可能にする
 
     ```xml
     <key>CFBundleDocumentTypes</key>
@@ -79,38 +93,8 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
                 <string>com.apple.m4a-audio</string>
             </array>
         </dict>
-        <dict>
-            <key>CFBundleTypeName</key>
-            <string>Log File</string>
-            <key>LSHandlerRank</key>
-            <string>Alternate</string>
-            <key>LSItemContentTypes</key>
-            <array>
-                <string>public.text</string>
-                <string>public.plain-text</string>
-                <string>public.log</string>
-            </array>
-        </dict>
     </array>
     ```
-
-### 設定の効果
-
-1. マイク使用権限
-   - アプリがマイクを使用する際のユーザー許可を取得可能に
-
-2. バックグラウンド実行
-   - アプリがバックグラウンドでも録音を継続可能に
-   - オーディオ処理をバックグラウンドで実行可能に
-
-3. ファイル共有機能
-   - iTunesまたはFinderでのファイル共有が可能に
-   - アプリ内のドキュメントディレクトリへの直接アクセスが可能に
-
-4. ファイルタイプ対応
-   - 音声ファイル（.m4a, .mp3）の共有メニューにアプリが表示
-   - テキストファイル（.txt, .log）の共有メニューにアプリが表示
-   - これらのファイルを開くアプリとして選択可能に
 
 ## 機能概要
 
@@ -124,8 +108,8 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
    - 再生中に停止アイコンを表示。
 
 3. システムイベントの処理
-   - 録音中にアプリが中断された場合、自動的に停止。
-   - 再開時には前回の録音状態を保持。
+   - 録音中に着電があり、応答した場合のみ、自動的に停止。
+   - 応答後に電話を切ると、自動的に録音を再開し、前回の録音の継続を行う。
 
 4. 録音中に電話が鳴った場合
     - 録音は継続される（状態は変化しない）
@@ -151,7 +135,7 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
 
 ## 電話着信時の録音動作仕様
 
-以下のデシジョンテーブルは、電話着信時の録音動作の仕様を示しています：
+以下のデシジョンテーブルは、電話着信時の録音動作の仕様を示しています。
 
 | **条件**                                | 1 | 2 | 3 | 4 | 5 |
 |-----------------------------------|---|---|---|---|---|
@@ -204,7 +188,7 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
     - UIとロジックを分離して、テスト可能性と保守性を向上。
 - サービスレイヤー
     - AudioServiceを用いて、音声録音・再生機能を統一的に管理。
-    - FileSharingServiceによるファイル共有機能の提供。
+    - FileSharingServiceを用いて、ファイル共有機能を管理。
 - 状態管理
     - Riverpodを採用し、アプリケーション全体の状態を効率的に管理。
     - Provider、StateNotifier、StateProviderを使用した適切な状態管理の実装。
@@ -251,7 +235,7 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
 ### テスト実行方法
 
 ```bash
-# ユニットテストに必要なMockを作成する
+# ユニットテストに必要なMockを作成する。なお、riverpod_annotationのためのg.dartファイルもこのコマンドで生成する。
 dart run build_runner build --delete-conflicting-outputs
 
 # ユニットテストを実行する
@@ -264,19 +248,52 @@ flutter test test/widgets/schedule_page/audio_file_list_test.dart
 
 ## インストールとセットアップ
 
-- Flutterのインストール
+### 開発環境のセットアップ
+
+1. Flutterのインストール
     - Flutterがインストールされていない場合は、公式サイトを参照してセットアップしてください。
     - Flutter自体のバージョン管理には`fvm`を使用しています。
-- プロジェクトのセットアップ
-    - リポジトリをクローン後、以下を実行します。
+
+2. lefthookのセットアップ
+    - コード品質を維持するため、git commit時に自動的にコードの整形とチェックを行います
 
     ```bash
+    # lefthookのインストール
+    brew install lefthook
+
+    # プロジェクトへのlefthookの設定
+    lefthook install
+    ```
+
+3. プロジェクトのセットアップ
+
+    ```bash
+    # 依存パッケージのインストール
     flutter pub get
+
+    # アプリの実行
     flutter run
     ```
 
-- iOSのビルド
-    - Xcodeを用いてiOS向けにビルドする場合:
+### lefthookの機能
+
+以下の処理がgit commit時に自動的に実行されます
+
+1. コードの自動修正
+    - `dart fix --apply lib`による自動修正の適用
+2. インポート文の整理
+    - `import_sorter`によるインポート文の整理
+3. コードフォーマット
+    - `dart format`によるコードスタイルの統一
+
+- 注意事項
+    - git commitに`--no-verify`オプションを使用すると、これらのチェックがスキップされます
+    - チェックをスキップすると、CIでエラーとなる可能性があります
+    - 問題が発生した場合は`lefthook run pre-commit -d`でデバッグモードで実行できます
+
+### iOSのビルド
+
+- Xcodeを用いてiOS向けにビルドする場合:
 
     ```bash
     open ios/Runner.xcworkspace
@@ -336,12 +353,12 @@ flutter test test/widgets/schedule_page/audio_file_list_test.dart
     ```
 
 3. 署名とプロビジョニングの問題
-    - 症状: `No profiles for 'com.example.scheduleRecorder' were found` というエラーが発生
+    - 症状: ビルド時に`No profiles for 'com.example.scheduleRecorder' were found` というエラーが発生
     - 解決手順:
         1. Xcodeで`ios/Runner.xcworkspace`を開く
         2. RunnerプロジェクトのSigningセクションで以下を確認
             - Teamが選択されているか
-                - personal teamでもビルドはできます
+                - Personal Teamでもビルド/ビルド後のインストールはできます
             - Bundle Identifierが正しく設定されているか
             - Automatically manage signingが有効になっているか
         3. Product > Clean Build Folderを実行
@@ -364,11 +381,12 @@ flutter test test/widgets/schedule_page/audio_file_list_test.dart
    - 録音中断時の自動ハンドリング
 
 2. **通話イベントの処理**
-   - `CXProviderDelegate`と`CXCallObserverDelegate`による通話状態の監視
-   - `AVAudioSession.interruptionNotification`による中断通知の監視
+   - `CXCallObserverDelegate`による通話状態の監視
+   - `AVAudioSession.isOtherAudioPlaying`による音声通話の監視
    - 通話開始時の録音一時停止と終了時の再開
 
 3. **録音状態の同期**
+   - `GetRecordState`イベント: 録音状態の取得
    - `RecordingInterrupted`イベント: 録音の一時停止
    - `RecordingResumed`イベント: 録音の再開
    - 状態変更時のMethodChannelを通じたFlutter側への通知
@@ -431,6 +449,7 @@ flutter test test/widgets/schedule_page/audio_file_list_test.dart
 
 - 文字列定数の管理
     - 文字列はすべて`lib/constants/strings.dart`で管理する。
+    - ログ文字列は現状ではこのファイルで管理していません。
 - クラウド連携
     - 録音データをクラウドストレージに保存する機能。
 - 音声認識
