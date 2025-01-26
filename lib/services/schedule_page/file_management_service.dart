@@ -1,7 +1,12 @@
+// Dart imports:
 import 'dart:io';
 
+// Package imports:
 import 'package:logger/logger.dart';
+
+// Project imports:
 import 'package:schedule_recorder/models/schedule_page/audio_file.dart';
+import 'package:schedule_recorder/services/schedule_page/file_system.dart';
 
 /// ファイル管理サービス
 class FileManagementService {
@@ -22,7 +27,7 @@ class FileManagementService {
   /// エラーが発生した場合はエラーを返す
   Future<List<AudioFile>> getAudioFiles() async {
     try {
-      final directory = Directory(_documentsPath);
+      final directory = FileSystem.getDirectory(_documentsPath);
       final files = await directory
           .list()
           .where((entity) =>
@@ -46,7 +51,7 @@ class FileManagementService {
   /// エラーが発生した場合はエラーを返す
   Future<void> deleteFile(String path) async {
     try {
-      final file = File(path);
+      final file = FileSystem.getFile(path);
       await file.delete();
       _logger.i('ファイルを削除しました: $path');
     } catch (e) {
