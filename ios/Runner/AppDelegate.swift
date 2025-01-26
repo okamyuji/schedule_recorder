@@ -100,10 +100,7 @@ extension AppDelegate: CXCallObserverDelegate {
                         } else {
                             attempts += 1
                             if attempts < maxAttempts {
-                                // 0.5秒後に再試行
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                    attemptToResumeRecording()
-                                }
+                                attemptToResumeRecording()
                                 self.debugLog("Retry resuming recording - attempt \(attempts)")
                             } else {
                                 self.debugLog("Failed to resume recording after \(maxAttempts) attempts")
@@ -112,10 +109,8 @@ extension AppDelegate: CXCallObserverDelegate {
                         }
                     }
                     
-                    // 最初の試行を1.5秒後に開始
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        attemptToResumeRecording()
-                    }
+                    // 即時実行
+                    attemptToResumeRecording()
                 } else {
                     self.debugLog("Recording is not paused, no need to resume")
                     self.resetCallState()
