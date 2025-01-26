@@ -1,10 +1,14 @@
-import 'dart:io';
-
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+
+// Project imports:
+import 'package:schedule_recorder/services/schedule_page/file_system.dart';
 
 /// ファイル共有機能を提供するサービスクラス
 class FileSharingService {
@@ -29,7 +33,7 @@ class FileSharingService {
       _logger.w('ファイル共有を開始します');
       final appDir = await getApplicationDocumentsDirectory();
       final recordingPath = path.join(appDir.path, 'recording.m4a');
-      final recordingFile = File(recordingPath);
+      final recordingFile = FileSystem.getFile(recordingPath);
 
       if (!recordingFile.existsSync()) {
         _logger.e('共有可能なファイルが見つかりません');
