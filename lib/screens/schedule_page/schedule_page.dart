@@ -22,6 +22,7 @@ import 'package:schedule_recorder/providers/schedule_page/recording_state_provid
 import 'package:schedule_recorder/services/schedule_page/audio_service.dart';
 import 'package:schedule_recorder/services/schedule_page/file_management_service.dart';
 import 'package:schedule_recorder/services/schedule_page/file_sharing_service.dart';
+import 'package:schedule_recorder/services/schedule_page/sharing_intent_service.dart';
 import 'package:schedule_recorder/widgets/schedule_page/audio_file_list.dart';
 import 'package:schedule_recorder/widgets/schedule_page/recording_buttons.dart';
 
@@ -63,6 +64,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
   late final AudioService _audioService;
   List<AudioFile> _audioFiles = [];
   RecordState _recordState = RecordState.stop;
+  late final SharingIntentService _sharingIntentService;
 
   @override
   void initState() {
@@ -93,6 +95,12 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
     }).catchError((e) {
       widget.logger.e('Recorderの初期化に失敗しました: $e');
     });
+
+    _sharingIntentService = SharingIntentService(
+      logger: widget.logger,
+      fileManagementService: _fileManagementService,
+    );
+    _sharingIntentService.initialize();
   }
 
   /// ログファイルの初期化
@@ -307,6 +315,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
     widget.recorder.dispose();
     widget.player.dispose();
     widget.logger.i('RecorderとPlayerが破棄されました');
+    _sharingIntentService.dispose();
     super.dispose();
   }
 

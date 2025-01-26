@@ -3,6 +3,7 @@ import 'dart:io';
 
 // Package imports:
 import 'package:logger/logger.dart';
+import 'package:path/path.dart' as path;
 
 // Project imports:
 import 'package:schedule_recorder/models/schedule_page/audio_file.dart';
@@ -57,6 +58,22 @@ class FileManagementService {
     } catch (e) {
       _logger.e('ファイルの削除に失敗しました: $path, エラー: $e');
       rethrow;
+    }
+  }
+
+  /// 共有された音声ファイルのパスを指定してファイルをインポートする
+  /// エラーが発生した場合はエラーを返す
+  /// インポートしたファイルのパスを返す
+  Future<void> importSharedAudioFile(String sourcePath) async {
+    final fileName = path.basename(sourcePath);
+    final targetPath = path.join(_documentsPath, fileName);
+
+    try {
+      await File(sourcePath).copy(targetPath);
+      _logger.i('音声ファイルをインポートしました: $targetPath');
+    } catch (e) {
+      _logger.e('音声ファイルのインポートに失敗しました: $e');
+      throw Exception('音声ファイルのインポートに失敗しました: $e');
     }
   }
 }
