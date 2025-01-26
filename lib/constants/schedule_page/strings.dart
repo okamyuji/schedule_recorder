@@ -25,8 +25,4 @@ class Strings {
 
   // ファイル共有
   static const shareButtonTooltip = 'ファイルを共有';
-
-  // ログメッセージ
-  static const logAppStart = '=== アプリケーションログ開始 ===';
-  static const logAppStarted = 'アプリケーションを起動しました';
 }
