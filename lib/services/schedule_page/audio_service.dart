@@ -1,13 +1,20 @@
+// Dart imports:
 import 'dart:async';
+
+// Flutter imports:
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+
+// Package imports:
+import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:riverpod/riverpod.dart';
-import '../../providers/schedule_page/recording_state_provider.dart';
 import 'package:record/record.dart';
-import 'package:intl/intl.dart';
+import 'package:riverpod/riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+// Project imports:
+import '../../providers/schedule_page/recording_state_provider.dart';
 
 part 'audio_service.g.dart';
 
@@ -52,6 +59,9 @@ class AudioServiceNotifier extends _$AudioServiceNotifier {
   bool get isHandlingInterruption => state.isHandlingInterruption;
   String? get currentRecordingPath => state.currentRecordingPath;
 
+  /// 録音状態を更新する
+  ///
+  /// [recordState] - 更新する録音状態
   void updateRecordState(RecordState recordState) {
     state = AudioServiceState(
       isHandlingInterruption: state.isHandlingInterruption,
@@ -61,6 +71,9 @@ class AudioServiceNotifier extends _$AudioServiceNotifier {
     );
   }
 
+  /// 通話中の録音中断を処理するかどうかを更新する
+  ///
+  /// [isHandling] - 通話中の録音中断を処理するかどうか
   void setHandlingInterruption(bool isHandling) {
     state = AudioServiceState(
       isHandlingInterruption: isHandling,
@@ -71,6 +84,9 @@ class AudioServiceNotifier extends _$AudioServiceNotifier {
     );
   }
 
+  /// 現在録音中のファイルのパスを更新する
+  ///
+  /// [path] - 更新するファイルのパス
   void setCurrentRecordingPath(String? path) {
     state = AudioServiceState(
       isHandlingInterruption: state.isHandlingInterruption,
