@@ -2,6 +2,7 @@ import Flutter
 import UIKit
 import AVFoundation
 import CallKit
+import receive_sharing_intent
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -26,6 +27,7 @@ import CallKit
         
         setupCallObserver()
         setupAudioSession()
+        setupSharingIntent()
         
         debugLog("Application launched")
         
@@ -52,6 +54,18 @@ import CallKit
         } catch {
             debugLog("Failed to setup audio session: \(error.localizedDescription)")
         }
+    }
+
+    private func setupSharingIntent() {
+        debugLog("Setting up sharing intent")
+        let registrar = self.registrar(forPlugin: "receive_sharing_intent")
+        SwiftReceiveSharingIntentPlugin.register(with: registrar!)
+        debugLog("Sharing intent setup completed")
+    }
+
+    override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        debugLog("Received URL: \(url.absoluteString)")
+        return super.application(app, open: url, options: options)
     }
 
     // デバッグログ出力

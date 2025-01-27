@@ -370,6 +370,64 @@ flutter test test/widgets/schedule_page/audio_file_list_test.dart
         flutter build ios --allow-provisioning-updates
         ```
 
+### iOS共有機能のトラブルシューティング
+
+#### 共有インテントが動作しない場合
+
+1. アプリの完全なクリーンアップ
+   - 実機からアプリを完全にアンインストール
+   - Xcodeで以下の操作を実行:
+     - Product > Clean Build Folder
+     - Window > Devices and Simulators を開く
+     - 接続されているデバイスを選択
+     - Installed Apps セクションでアプリを見つけて削除（"-" ボタンをクリック）
+   - デバイスの設定アプリで:
+     - 設定 > 一般 > iPhoneストレージ からアプリを完全に削除
+     - 設定 > 一般 > リセット > 位置情報とプライバシーをリセット
+
+2. プロジェクトの再ビルド
+
+   ```bash
+   flutter clean
+   flutter pub get
+   cd ios
+   pod install
+   cd ..
+   flutter run
+   ```
+
+3. Share Extension設定の確認:
+   - `ios/Share Extension/Info.plist` の設定を確認
+   - 特に以下の設定が正しいことを確認:
+
+     ```xml
+     <key>NSExtensionActivationRule</key>
+     <dict>
+         <key>NSExtensionActivationSupportsFileWithMaxCount</key>
+         <integer>1</integer>
+         <key>NSExtensionActivationSupportsAudioWithMaxCount</key>
+         <integer>1</integer>
+         <key>NSExtensionActivationMIMETypes</key>
+         <array>
+             <string>audio/mpeg</string>
+             <string>audio/mp4</string>
+             <string>audio/x-m4a</string>
+             <string>audio/wav</string>
+         </array>
+     </dict>
+     ```
+
+4. デバッグログの確認:
+   - Xcodeで Window > Devices and Simulators を開く
+   - デバイスを選択して Open Console ボタンをクリック
+   - 共有インテント関連のログを確認
+
+#### 注意事項
+
+- 共有インテントの設定を変更した場合は、必ずアプリの完全なクリーンアップと再インストールを行ってください
+- iOS Share Extensionの設定は、一度インストールされると更新が反映されにくい場合があります
+- アプリのアンインストールだけでなく、デバイスの共有設定のリセットも必要な場合があります
+
 ## 開発者向け実装詳細
 
 ### iOS側の実装詳細

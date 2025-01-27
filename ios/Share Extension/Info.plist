@@ -16,25 +16,34 @@
                    <string>Video</string>
                    <!--TODO: Add this flag, if you want to support sharing images into your app-->
                    <string>Image</string>
+                   <string>Audio</string>
                </array>
             <key>NSExtensionActivationRule</key>
             <dict>
                 <!--TODO: Add this flag, if you want to support sharing text into your app-->
-                <key>NSExtensionActivationSupportsText</key>
-                <true/>
-                <!--TODO: Add this tag, if you want to support sharing urls into your app-->
-            	<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
-            	<integer>1</integer>
-            	<!--TODO: Add this flag, if you want to support sharing images into your app-->
-                <key>NSExtensionActivationSupportsImageWithMaxCount</key>
-                <integer>100</integer>
-                <!--TODO: Add this flag, if you want to support sharing video into your app-->
+                <key>NSExtensionActivationSupportsFileWithMaxCount</key>
+                <integer>1</integer>
+                <key>NSExtensionActivationSupportsAudioWithMaxCount</key>
+                <integer>1</integer>
+                <key>NSExtensionActivationMIMETypes</key>
+                <array>
+                    <string>audio/mpeg</string>
+                    <string>audio/mp4</string>
+                    <string>audio/x-m4a</string>
+                    <string>audio/wav</string>
+                    <string>public.audio</string>
+                    <string>public.mp3</string>
+                    <string>public.m4a</string>
+                    <string>public.wav</string>
+                </array>
                 <key>NSExtensionActivationSupportsMovieWithMaxCount</key>
-                <integer>100</integer>
-                <!--TODO: Add this flag, if you want to support sharing other files into your app-->
-                <!--Change the integer to however many files you want to be able to share at a time-->
-				<key>NSExtensionActivationSupportsFileWithMaxCount</key>
-				<integer>1</integer>
+                <integer>0</integer>
+                <key>NSExtensionActivationSupportsImageWithMaxCount</key>
+                <integer>0</integer>
+                <key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
+                <integer>0</integer>
+                <key>NSExtensionActivationSupportsText</key>
+                <false/>
             </dict>
         </dict>
 		<key>NSExtensionMainStoryboard</key>

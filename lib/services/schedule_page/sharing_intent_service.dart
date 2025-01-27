@@ -28,8 +28,10 @@ class SharingIntentService {
 
     // アプリが起動していない状態で共有された場合の処理
     try {
+      _logger.d('初期共有メディアの取得を開始します');
       final initialMedia =
           await ReceiveSharingIntent.instance.getInitialMedia();
+      _logger.d('初期共有メディアの取得が完了しました: ${initialMedia.length}件');
       if (initialMedia.isNotEmpty) {
         await _processSharedFiles(initialMedia);
       }
@@ -38,9 +40,13 @@ class SharingIntentService {
     }
 
     // アプリ起動中に共有された場合の処理
+    _logger.d('共有インテントストリームのリスナーを設定します');
     _intentDataStreamSubscription =
         ReceiveSharingIntent.instance.getMediaStream().listen(
-      _processSharedFiles,
+      (files) {
+        _logger.d('共有インテントストリームからファイルを受信しました: ${files.length}件');
+        _processSharedFiles(files);
+      },
       onError: (error) {
         _logger.e('共有インテントストリームでエラーが発生しました: $error');
       },
@@ -56,6 +62,8 @@ class SharingIntentService {
 
     for (final sharedFile in sharedFiles) {
       try {
+        _logger.d(
+            '共有ファイルの処理: ${sharedFile.path}, MIMEタイプ: ${sharedFile.mimeType}');
         final audioFile = SharedAudioFile.fromSharedMediaFile(sharedFile);
 
         if (!audioFile.isAudioFile) {
@@ -71,6 +79,7 @@ class SharingIntentService {
     }
 
     // 処理完了後にインテントをリセット
+    _logger.d('共有インテントをリセットします');
     ReceiveSharingIntent.instance.reset();
   }
 
