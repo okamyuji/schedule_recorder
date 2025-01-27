@@ -5,8 +5,11 @@ Schedule Recorderは、Flutterをベースにした音声を録音し、予定�
 ## デモ動画
 
 - 音声録音時のデモ動画
+
 ![音声録音時のデモ動画](./images/normal_record.gif)
+
 - 通話中に録音を一時停止と自動再開したデモ動画
+
 ![通話中に録音を一時停止と自動再開したデモ動画](./images/call_resume.gif)
 
 ## 特徴
