@@ -275,6 +275,97 @@ flutter test test/widgets/schedule_page/recording_buttons_test.dart
 flutter test test/widgets/schedule_page/audio_file_list_test.dart
 ```
 
+### iOSユニットテスト
+
+#### テストの実装内容
+
+1. **モックオブジェクト**
+   - `MockMethodChannel`: Flutterとのメソッドチャネル通信をモック化
+   - `MockCXProvider`: CallKitプロバイダーをモック化
+   - `MockCXCallController`: CallKitコントローラーをモック化
+   - `FlutterBinaryMessengerDummy`: テスト用のダミーMessenger
+
+2. **テストカバレッジ**
+   - オーディオセッション設定のテスト
+   - ファイル操作機能のテスト
+   - 通話処理のテスト
+   - SIP通話機能のテスト
+   - CallKitデリゲート処理のテスト
+
+3. **主要なテストケース**
+   - `testConfigureAudioSessionForRecording`: 録音用オーディオセッション設定
+   - `testVerifyFileExistsAndIsValid`: ファイル存在確認機能
+   - `testGetFileInfo`: ファイル情報取得機能
+   - `testHandleNewAudioDeviceConnected`: 新規オーディオデバイス接続処理
+   - `testHandleAudioDeviceDisconnected`: オーディオデバイス切断処理
+   - `testReportSIPCallStarted`: SIP通話開始報告
+   - `testReportSIPCallEnded`: SIP通話終了報告
+   - `testProviderDidReset`: CallKitプロバイダーリセット
+   - `testProviderPerformAnswerCallAction`: 通話応答アクション
+
+#### テストの実行方法
+
+1. **コマンドラインからのテスト実行**
+
+    ```bash
+    # プロジェクトのiOSディレクトリに移動
+    cd ios
+
+    # xcodebuildでテストを実行
+    # -destinationには自分のマシンにあるiOSシミュレーターに一致するように記載してください
+    xcodebuild test \
+    -workspace Runner.xcworkspace \
+    -scheme Runner \
+    -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.4' \
+    -enableCodeCoverage YES \
+    -derivedDataPath Build/
+
+    # カバレッジレポートの生成（要xcov）
+    gem install xcov
+    xcov \
+    --workspace Runner.xcworkspace \
+    --scheme Runner \
+    --derived_data_path Build/ \
+    --output_directory coverage_report \
+    --html_report \
+    --minimum_coverage_percentage 75.0 \
+    --ignore_file_path "Pods/*" \
+    --include_test_targets false
+    ```
+
+2. **Xcodeからのテスト実行**
+   - Xcodeで`ios/Runner.xcworkspace`を開く
+   - Product > Test (⌘U) を選択
+   - テストナビゲーターでテスト結果とカバレッジを確認
+
+3. **テスト結果の確認**
+   - テスト成功/失敗の確認
+   - カバレッジレポートの確認
+   - 詳細なテストログの確認
+
+#### テストのベストプラクティス
+
+1. **テストケース作成のガイドライン**
+   - 各テストは単一の機能に焦点を当てる
+   - 適切なセットアップとクリーンアップを行う
+   - エッジケースを考慮したテストを含める
+   - 非同期処理の適切な待機を実装
+
+2. **モックの効果的な使用**
+   - 外部依存を適切にモック化
+   - テスト可能なコードの設計
+   - モックオブジェクトの再利用
+
+3. **アサーションのベストプラクティス**
+   - 明確なアサーションメッセージ
+   - 適切なアサーションの選択
+   - 複数の状態の検証
+
+4. **テストメンテナンス**
+   - テストコードの定期的な見直し
+   - 重複テストの排除
+   - テストパフォーマンスの最適化
+
 ## インストールとセットアップ
 
 ### 開発環境のセットアップ
