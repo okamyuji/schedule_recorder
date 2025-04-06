@@ -49,3 +49,6 @@ app.*.map.json
 
 # Cursor Rules
 .cursor/
+
+ios/Build/
+ios/coverage_report/
