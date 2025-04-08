@@ -455,11 +455,31 @@ import Network
     
     // CallKitにSIP通話の終了を報告する
     private func reportSIPCallEnded() {
-        guard let uuid = currentSIPCallUUID else { return }
+        guard let uuid = currentSIPCallUUID else {
+            debugLog("SIP call end attempted but no UUID found, nothing to report")
+            return
+        }
+        
+        debugLog("Reporting SIP call ended with UUID: \(uuid)")
+        
+        // オーディオセッションの状態を詳細に確認
+        let audioSession = AVAudioSession.sharedInstance()
+        debugLog("Audio session state: isOtherAudioPlaying=\(audioSession.isOtherAudioPlaying)")
+        
+        for output in audioSession.currentRoute.outputs {
+            debugLog("Current audio route output: \(output.portName), type: \(output.portType.rawValue)")
+        }
+        
+        // 録音状態を確認
+        methodChannel?.invokeMethod("GetRecordState", arguments: nil) { [weak self] result in
+            guard let self = self else { return }
+            let recordState = (result as? String) ?? "unknown"
+            self.debugLog("Current recording state before ending call: \(recordState)")
+        }
         
         endCall(uuid: uuid)
         currentSIPCallUUID = nil
-        debugLog("SIP call ended and reported to CallKit")
+        debugLog("SIP call ended and reported to CallKit, UUID cleared")
     }
     
     // 指定されたUUIDの通話を終了する
@@ -578,10 +598,69 @@ extension AppDelegate: CXCallObserverDelegate {
     private func directlyResumeRecording() {
         debugLog("Attempting to resume recording with enhanced method")
         
-        // 1. まずオーディオセッションを完全にリセット
-        configureAudioSessionForRecording()
+        // 1. 現在のオーディオデバイス情報を取得して確認
+        let audioSession = AVAudioSession.sharedInstance()
+        let currentRoute = audioSession.currentRoute
         
-        // 2. Flutter側のレコーダー状態を確認
+        // デバイス情報のログ出力
+        debugLog("Current audio route before resume:")
+        for output in currentRoute.outputs {
+            debugLog("- Device: \(output.portName), Type: \(output.portType.rawValue)")
+        }
+        
+        // SIP通話がまだアクティブでないことを確認
+        if isSIPCallActive() {
+            debugLog("WARNING: SIP call still active, cannot resume recording yet")
+            // 少し待ってから再試行
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                guard let self = self else { return }
+                if !self.isSIPCallActive() {
+                    self.debugLog("SIP call ended after delay, retrying resume")
+                    self.directlyResumeRecording()
+                } else {
+                    // さらに遅延させて再試行
+                    self.debugLog("SIP call still active after initial delay, waiting longer")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+                        guard let self = self else { return }
+                        if !self.isSIPCallActive() {
+                            self.debugLog("SIP call ended after extended delay, retrying resume")
+                            self.directlyResumeRecording()
+                        } else {
+                            self.debugLog("SIP call still active after extended delay, giving up resume attempt")
+                            self.resetCallState()
+                        }
+                    }
+                }
+            }
+            return
+        }
+        
+        // 2. オーディオセッションを完全にリセット
+        do {
+            // まず現在のセッションを非アクティブ化
+            try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+            
+            // セッションを再構成
+            try audioSession.setCategory(
+                .playAndRecord,
+                mode: .default,
+                options: [.defaultToSpeaker, .allowBluetooth]
+            )
+            
+            // オーディオセッションを最適化
+            try audioSession.setPreferredIOBufferDuration(0.005)
+            try audioSession.setPreferredSampleRate(44100)
+            
+            // セッションを再アクティブ化
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+            
+            debugLog("Audio session successfully reconfigured for recording")
+        } catch {
+            debugLog("ERROR: Failed to reconfigure audio session: \(error.localizedDescription)")
+            // エラーがあっても続行を試みる
+        }
+        
+        // 3. Flutter側のレコーダー状態を確認
         methodChannel?.invokeMethod("GetRecordState", arguments: nil) { [weak self] result in
             guard let self = self else { return }
             let stateBefore = (result as? String) ?? "unknown"
@@ -593,14 +672,18 @@ extension AppDelegate: CXCallObserverDelegate {
                     self.debugLog("Recording already in record state, skipping resume")
                     self.resetCallState()
                     return
+                } else if stateBefore == "stop" || stateBefore == "unknown" {
+                    self.debugLog("Recording in stop/unknown state, cannot resume")
+                    self.resetCallState()
+                    return
                 }
             }
             
-            // 3. 録音再開を通知
+            // 4. 録音再開を通知
             self.methodChannel?.invokeMethod("RecordingResumed", arguments: nil)
             self.debugLog("Sent recording resume signal")
             
-            // 4. 少し待ってから状態を確認
+            // 5. 少し待ってから状態を確認
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
                 guard let self = self else { return }
                 
@@ -613,13 +696,42 @@ extension AppDelegate: CXCallObserverDelegate {
                     } else {
                         self.debugLog("WARNING: Recording not in record state after resume, trying again")
                         
+                        // 再度オーディオセッションをリセットしてから再試行
+                        self.configureAudioSessionForRecording()
+                        
                         // もう一度試す
                         self.methodChannel?.invokeMethod("RecordingResumed", arguments: nil)
                         self.debugLog("Sent second resume signal")
+                        
+                        // 最終確認
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                            guard let self = self else { return }
+                            self.methodChannel?.invokeMethod("GetRecordState", arguments: nil) { result in
+                                let finalState = (result as? String) ?? "unknown"
+                                self.debugLog("Final recording state after second resume attempt: \(finalState)")
+                                if finalState != "record" {
+                                    self.debugLog("ERROR: Failed to resume recording after multiple attempts")
+                                    
+                                    // 最後の手段として、オーディオルートを再確認
+                                    let currentRoute = AVAudioSession.sharedInstance().currentRoute
+                                    self.debugLog("Current audio route after failed resume:")
+                                    for output in currentRoute.outputs {
+                                        self.debugLog("- Final device: \(output.portName), Type: \(output.portType.rawValue)")
+                                    }
+                                    
+                                    // もう一度だけ試す
+                                    self.configureAudioSessionForRecording()
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                                        self?.methodChannel?.invokeMethod("RecordingResumed", arguments: nil)
+                                        self?.debugLog("Sent final resume signal")
+                                    }
+                                }
+                            }
+                        }
                     }
                     
                     // 状態をリセット
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
                         self?.resetCallState()
                     }
                 }
