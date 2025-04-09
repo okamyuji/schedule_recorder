@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/services.dart';
@@ -22,19 +23,44 @@ class AudioService {
 
   AudioService({required Logger logger, AudioRecorder? recorder})
       : _log = logger,
-        _record = recorder;
+        _record = recorder {
+    // ネイティブプラットフォームからのメソッド呼び出しを処理するハンドラを設定
+    _setupMethodCallHandler();
+  }
+
+  // ネイティブからのメソッド呼び出しハンドラの設定
+  void _setupMethodCallHandler() {
+    _methodChannel.setMethodCallHandler((call) async {
+      switch (call.method) {
+        case 'RecordingInterrupted':
+          _log.i('録音中断イベントを受信しました');
+          if (_recordState == RecordState.record) {
+            await pauseRecording();
+          }
+          return null;
+        case 'RecordingResumed':
+          _log.i('録音再開イベントを受信しました');
+          if (_recordState == RecordState.pause) {
+            await resumeRecording();
+          }
+          return null;
+        case 'GetRecordState':
+          _log.i('録音状態が要求されました');
+          return _recordState.name;
+        case 'LogDebugMessage':
+          _log.d('ネイティブログ: ${call.arguments}');
+          return null;
+        default:
+          _log.w('未知のメソッド呼び出し: ${call.method}');
+          return null;
+      }
+    });
+  }
 
   /// 録音を再開する
   Future<void> resumeRecording() async {
     try {
       _log.i('録音再開を試みています...');
-
-      // 現在のオーディオセッション状態をチェック
-      bool isCallActive = await _methodChannel.invokeMethod('IsSIPCallActive');
-      if (isCallActive) {
-        _log.w('SIP通話が進行中のため、録音を再開できません');
-        return;
-      }
 
       // 一時停止状態を確認
       if (_recordState != RecordState.pause) {
@@ -42,13 +68,20 @@ class AudioService {
         return;
       }
 
-      // デバイスの状態をチェック
-      var deviceInfo = await _methodChannel.invokeMethod('GetAudioDeviceInfo');
-      _log.i('再開前のオーディオデバイス情報: $deviceInfo');
-
-      await _record?.resume();
-      _recordState = RecordState.record;
-      _log.i('録音を再開しました');
+      // iOSの場合は直接録音再開をネイティブ側に要求
+      if (Platform.isIOS) {
+        try {
+          await _methodChannel.invokeMethod('directlyResumeRecording');
+          _log.i('iOSネイティブ側に録音再開を要求しました');
+        } catch (e) {
+          _log.e('iOSネイティブ側での録音再開に失敗しました: $e');
+          rethrow;
+        }
+      } else {
+        await _record?.resume();
+        _recordState = RecordState.record;
+        _log.i('録音を再開しました');
+      }
 
       // 通知を送信
       recordStateStreamController.add(_recordState);
@@ -64,6 +97,17 @@ class AudioService {
   Future<void> startRecording(String path) async {
     try {
       _log.i('録音を開始します: $path');
+
+      // iOSの場合はオーディオセッションを設定
+      if (Platform.isIOS) {
+        try {
+          await _methodChannel.invokeMethod('configureAudioSession');
+          _log.i('オーディオセッションを設定しました');
+        } catch (e) {
+          _log.w('オーディオセッション設定中にエラーが発生しました: $e');
+        }
+      }
+
       await _record?.start(
         const RecordConfig(
           encoder: AudioEncoder.aacLc,
@@ -111,7 +155,7 @@ class AudioService {
         recordStateStreamController.add(_recordState);
         _log.i('録音が停止されました: $path');
       } else {
-        _log.w('録音を停止できません - 録音状態ではありません');
+        _log.w('録音を停止できません - すでに停止しています');
       }
       return path;
     } catch (e) {
@@ -127,7 +171,7 @@ class AudioService {
 
   /// リソースの解放
   void dispose() {
-    recordStateStreamController.close();
     _record?.dispose();
+    recordStateStreamController.close();
   }
 }
