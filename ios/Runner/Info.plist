@@ -43,6 +43,7 @@
 		<string>audio</string>
 		<string>processing</string>
 		<string>voip</string>
+		<string>remote-notifications</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
@@ -74,6 +75,25 @@
 				<string>public.mp3</string>
 				<string>public.mpeg-4-audio</string>
 				<string>com.apple.m4a-audio</string>
+			</array>
+		</dict>
+	</array>
+	<!-- 追加: ユーザー通知フレームワークのためのカテゴリ設定 -->
+	<key>UIUserNotificationCategory</key>
+	<array>
+		<dict>
+			<key>UIUserNotificationCategoryIdentifier</key>
+			<string>CALL_ENDED</string>
+			<key>UIUserNotificationActions</key>
+			<array>
+				<dict>
+					<key>UIUserNotificationActionIdentifier</key>
+					<string>RESUME_RECORDING</string>
+					<key>UIUserNotificationActionTitle</key>
+					<string>録音を再開</string>
+					<key>UIUserNotificationActionActivationMode</key>
+					<string>foreground</string>
+				</dict>
 			</array>
 		</dict>
 	</array>
