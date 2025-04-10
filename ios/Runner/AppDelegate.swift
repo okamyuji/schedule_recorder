@@ -3,6 +3,7 @@ import UIKit
 import AVFoundation
 import CallKit
 import Network
+import UserNotifications // 通知フレームワーク
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -23,7 +24,13 @@ import Network
         methodChannel = FlutterMethodChannel(
             name: channelName,
             binaryMessenger: controller.binaryMessenger)
-        
+
+        // 通知センターのデリゲートを設定
+        UNUserNotificationCenter.current().delegate = self
+
+        // 通知許可のリクエスト
+        requestNotificationPermission()
+      
         // メソッドチャネルのハンドラーを設定
         setupMethodChannelHandler()
         
@@ -38,6 +45,82 @@ import Network
         
         GeneratedPluginRegistrant.register(with: self)
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
+
+    // 通知許可をリクエスト
+    private func requestNotificationPermission() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
+            if granted {
+                self.debugLog("通知許可が承認されました")
+            } else if let error = error {
+                self.debugLog("通知許可リクエストエラー: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    // 通知カテゴリを登録
+    private func registerNotificationCategories() {
+        let resumeAction = UNNotificationAction(
+            identifier: "RESUME_RECORDING",
+            title: "録音を再開",
+            options: .foreground)
+        
+        let callEndedCategory = UNNotificationCategory(
+            identifier: "CALL_ENDED",
+            actions: [resumeAction],
+            intentIdentifiers: [],
+            options: [])
+        
+        UNUserNotificationCenter.current().setNotificationCategories([callEndedCategory])
+    }
+   
+    // 通話終了時のローカル通知を表示
+    private func showCallEndedNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = "通話が終了しました"
+        content.body = "録音を再開するにはタップしてください"
+        content.sound = UNNotificationSound.default
+        content.categoryIdentifier = "CALL_ENDED"
+        
+        // 即時に通知を表示
+        let request = UNNotificationRequest(
+            identifier: "callEnded-\(Date().timeIntervalSince1970)",
+            content: content,
+            trigger: nil)
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                self.debugLog("通知送信エラー: \(error.localizedDescription)")
+            } else {
+                self.debugLog("通知を送信しました")
+            }
+        }
+    }
+
+    // 通知がタップされたときの処理
+    override func userNotificationCenter(_ center: UNUserNotificationCenter, 
+                            didReceive response: UNNotificationResponse, 
+                            withCompletionHandler completionHandler: @escaping () -> Void) {
+        let actionIdentifier = response.actionIdentifier
+        
+        if actionIdentifier == "RESUME_RECORDING" || 
+        actionIdentifier == UNNotificationDefaultActionIdentifier {
+            // 通知タップで録音を再開
+            if !isHandlingCall {
+                debugLog("通知タップによる録音再開")
+                methodChannel?.invokeMethod("RecordingResumed", arguments: nil)
+            }
+        }
+        
+        completionHandler()
+    }
+    
+    // アプリがフォアグラウンドにある状態で通知を受け取った場合の処理
+    override func userNotificationCenter(_ center: UNUserNotificationCenter, 
+                               willPresent notification: UNNotification, 
+                               withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // フォアグラウンドでも通知を表示
+        completionHandler([])
     }
     
     // メソッドチャネルのハンドラを設定
@@ -201,6 +284,10 @@ extension AppDelegate: CXCallObserverDelegate {
                 if UIApplication.shared.applicationState == .active {
                     self.methodChannel?.invokeMethod("RecordingResumed", arguments: nil)
                     self.debugLog("通話終了後に録音を再開しました")
+                } else {
+                    // バックグラウンドにいる場合は通知を表示
+                    self.showCallEndedNotification()
+                    self.debugLog("アプリがバックグラウンドのため通知を送信しました")
                 }
             }
         } else if call.isOutgoing && call.hasConnected {
@@ -212,5 +299,23 @@ extension AppDelegate: CXCallObserverDelegate {
             isHandlingCall = true
             methodChannel?.invokeMethod("RecordingInterrupted", arguments: nil)
         }
+    }
+}
+
+// 通知を介してアプリが起動された場合の処理
+extension AppDelegate {
+    // リモート通知処理のメソッド - 正しいメソッド名に修正
+    override func application(_ application: UIApplication, 
+                             didReceiveRemoteNotification userInfo: [AnyHashable: Any], 
+                             fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        debugLog("通知によりアプリが起動されました")
+        
+        // 通話中でなければ録音を再開
+        if !isHandlingCall {
+            methodChannel?.invokeMethod("RecordingResumed", arguments: nil)
+            debugLog("通知による起動で録音を再開しました")
+        }
+        
+        completionHandler(.newData)
     }
 }
